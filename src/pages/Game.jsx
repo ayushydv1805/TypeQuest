@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react";
 import { typingTexts } from "../data/texts";
 import AchievementToast from "../components/AchievementToast";
-import {
-  calculateWPM,
-  calculateAccuracy,
-  calculateScore,
-  calculateXP,
-} from "../utils/gameLogic";
+import { calculateWPM, calculateAccuracy, calculateScore, calculateXP } from "../utils/gamelogic";
 
 //import { completeGame } from "../utils/storage";
 import { completeGame, getPlayerData } from "../utils/storage";
