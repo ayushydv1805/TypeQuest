@@ -21,6 +21,7 @@ function createDefaultPlayer() {
     unlockedAchievements: [],
     unlockedThemes: [],
     equippedTheme: "default",
+    colorMode: "dark",
   };
 }
 
@@ -57,6 +58,7 @@ function normalizePlayer(player = {}) {
       : [],
     equippedTheme:
       typeof player.equippedTheme === "string" ? player.equippedTheme : "default",
+    colorMode: player.colorMode === "light" ? "light" : "dark",
   };
 }
 
