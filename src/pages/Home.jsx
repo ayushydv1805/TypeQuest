@@ -15,6 +15,8 @@ function Home({
   onBoss,
   onShop,
   onSettings,
+  onToggleColorMode,
+  colorMode,
 }) {
   const player = getPlayerData();
 
@@ -22,7 +24,7 @@ function Home({
 
   return (
     <div className="app">
-      <Navbar player={player} onSettings={onSettings} />
+      <Navbar player={player} onSettings={onSettings} onToggleColorMode={onToggleColorMode} colorMode={colorMode} />
 
       <main className="home">
         <section className="hero">
