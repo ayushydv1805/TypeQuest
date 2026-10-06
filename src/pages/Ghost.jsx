@@ -83,7 +83,7 @@ const [achievementMessage, setAchievementMessage] =
 
     const interval = setInterval(() => {
       setGhostWords((previous) => previous + 1);
-    }, Math.max(700, 60000 / ghostWpm));
+    }, Math.max(100, 60000 / ghostWpm));
 
     return () => clearInterval(interval);
   }, [started, finished, ghostWpm]);
@@ -147,6 +147,8 @@ const reward = completeGame({
   combo: 0,
   ghostWon: distance >= 0,
   bossWon: false,
+  mode: "Ghost",
+  score,
 });
 if (
   reward &&
