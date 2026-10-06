@@ -15,6 +15,7 @@ function createDefaultPlayer() {
     totalTime: 0,
     currentStreak: 0,
     lastPlayedDate: "",
+    lastDailyDate: "",
     recentRuns: [],
     unlockedModes: ["classic"],
     unlockedAchievements: [],
@@ -42,13 +43,20 @@ function normalizePlayer(player = {}) {
     totalTime: Math.max(0, numberOr(player.totalTime, 0)),
     currentStreak: Math.max(0, Math.floor(numberOr(player.currentStreak, 0))),
     lastPlayedDate: typeof player.lastPlayedDate === "string" ? player.lastPlayedDate : "",
+    lastDailyDate: typeof player.lastDailyDate === "string" ? player.lastDailyDate : "",
     recentRuns: Array.isArray(player.recentRuns) ? player.recentRuns.slice(0, MAX_RECENT_RUNS) : [],
-    unlockedModes: Array.isArray(player.unlockedModes) && player.unlockedModes.length
-      ? [...new Set(["classic", ...player.unlockedModes])]
-      : ["classic"],
-    unlockedAchievements: Array.isArray(player.unlockedAchievements) ? [...new Set(player.unlockedAchievements)] : [],
-    unlockedThemes: Array.isArray(player.unlockedThemes) ? [...new Set(player.unlockedThemes)] : [],
-    equippedTheme: typeof player.equippedTheme === "string" ? player.equippedTheme : "default",
+    unlockedModes:
+      Array.isArray(player.unlockedModes) && player.unlockedModes.length
+        ? [...new Set(["classic", ...player.unlockedModes])]
+        : ["classic"],
+    unlockedAchievements: Array.isArray(player.unlockedAchievements)
+      ? [...new Set(player.unlockedAchievements)]
+      : [],
+    unlockedThemes: Array.isArray(player.unlockedThemes)
+      ? [...new Set(player.unlockedThemes)]
+      : [],
+    equippedTheme:
+      typeof player.equippedTheme === "string" ? player.equippedTheme : "default",
   };
 }
 
@@ -93,13 +101,23 @@ export function completeGame({
   bossWon = false,
   mode = "Classic",
   score = 0,
+  daily = false,
 }) {
   const player = getPlayerData();
+  const today = getDateKey();
+  const dailyAlreadyRewarded = daily && player.lastDailyDate === today;
 
-  player.xp += Math.max(0, numberOr(xp));
-  player.coins += Math.max(0, numberOr(coins));
+  const earnedXp = dailyAlreadyRewarded ? 0 : Math.max(0, numberOr(xp));
+  const earnedCoins = dailyAlreadyRewarded ? 0 : Math.max(0, numberOr(coins));
+
+  player.xp += earnedXp;
+  player.coins += earnedCoins;
   player.testsCompleted += 1;
   player.totalTime += Math.max(0, numberOr(time));
+
+  if (daily && !dailyAlreadyRewarded) {
+    player.lastDailyDate = today;
+  }
 
   if (wpm > player.bestWpm) player.bestWpm = wpm;
   if (accuracy > player.bestAccuracy) player.bestAccuracy = accuracy;
@@ -131,12 +149,12 @@ export function completeGame({
 
   player.recentRuns.unshift({
     id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    date: getDateKey(),
+    date: today,
     mode,
     wpm: Math.round(numberOr(wpm)),
     accuracy: Math.round(numberOr(accuracy)),
     score: Math.round(numberOr(score)),
-    xp: Math.round(numberOr(xp)),
+    xp: Math.round(earnedXp),
   });
 
   player.recentRuns = player.recentRuns.slice(0, MAX_RECENT_RUNS);
@@ -146,6 +164,7 @@ export function completeGame({
     player,
     leveledUp,
     newlyUnlocked,
+    dailyRewarded: daily ? !dailyAlreadyRewarded : false,
   };
 }
 
