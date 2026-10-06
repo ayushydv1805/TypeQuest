@@ -136,6 +136,9 @@ function SpeedRush({ onBack }) {
       wpm,
       accuracy,
       time: elapsedTime,
+      combo: bestCombo,
+      mode: "Speed Rush",
+      score,
     });
 
     setLevelUp(reward.leveledUp);
