@@ -9,7 +9,7 @@ export function calculateWPM(charactersTyped, timeInSeconds) {
 
 export function calculateAccuracy(correctChars, totalChars) {
   if (totalChars <= 0) return 100;
-  return Math.round((correctChars / totalChars) * 100);
+  return Math.min(100, Math.max(0, Math.round((correctChars / totalChars) * 100)));
 }
 
 export function calculateScore(wpm, accuracy) {
@@ -21,7 +21,10 @@ export function calculateXP(wpm, accuracy) {
 }
 
 export function getDateKey(date = new Date()) {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function getDailyChallengeIndex(length, date = new Date()) {
