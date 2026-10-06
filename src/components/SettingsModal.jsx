@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { getPlayerData, resetPlayerData } from "../utils/storage";
 
-function SettingsModal({ onClose }) {
-  const [player] = useState(getPlayerData);
+function SettingsModal({ onClose, colorMode, onColorModeChange }) {
+  const player = getPlayerData();
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -47,9 +47,45 @@ function SettingsModal({ onClose }) {
             <span>PLAYER CONTROL</span>
             <h2 id="settings-title">Settings</h2>
           </div>
-          <button className="icon-btn" onClick={onClose} aria-label="Close settings">
+          <button
+            className="icon-btn"
+            onClick={onClose}
+            aria-label="Close settings"
+          >
             ×
           </button>
+        </div>
+
+        <div className="appearance-card">
+          <div>
+            <span>APPEARANCE</span>
+            <strong>{colorMode === "light" ? "Light Mode" : "Dark Mode"}</strong>
+          </div>
+
+          <div className="mode-switch" role="group" aria-label="Color mode">
+            <button
+              className={
+                colorMode === "dark"
+                  ? "mode-switch-btn active"
+                  : "mode-switch-btn"
+              }
+              onClick={() => onColorModeChange("dark")}
+              aria-pressed={colorMode === "dark"}
+            >
+              🌙 Dark
+            </button>
+            <button
+              className={
+                colorMode === "light"
+                  ? "mode-switch-btn active"
+                  : "mode-switch-btn"
+              }
+              onClick={() => onColorModeChange("light")}
+              aria-pressed={colorMode === "light"}
+            >
+              ☀️ Light
+            </button>
+          </div>
         </div>
 
         <div className="settings-grid">
@@ -72,7 +108,7 @@ function SettingsModal({ onClose }) {
         </div>
 
         <div className="settings-note">
-          Your progress is stored locally in this browser. Clearing browser storage will also clear your TypeQuest save.
+          Your theme and light/dark preference are saved locally in this browser, so your choice stays after a refresh.
         </div>
 
         <button className="danger-btn" onClick={handleReset}>
