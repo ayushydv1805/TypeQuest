@@ -1,12 +1,8 @@
-import { getPlayerData } from "../utils/storage";
-
-function LevelBar() {
-  const player = getPlayerData();
-
-  const currentXP = player.xp;
+function LevelBar({ player }) {
   const xpNeeded = 100;
+  const currentXP = Math.max(0, player.xp);
   const progress = Math.min((currentXP / xpNeeded) * 100, 100);
-  const xpRemaining = xpNeeded - currentXP;
+  const xpRemaining = Math.max(0, xpNeeded - currentXP);
 
   return (
     <div className="level-section">
@@ -22,19 +18,15 @@ function LevelBar() {
       </div>
 
       <div className="xp-bar">
-        <div
-          className="xp-fill"
-          style={{ width: `${progress}%` }}
-        />
+        <div className="xp-fill" style={{ width: `${progress}%` }} />
       </div>
 
       <div className="level-footer">
-        {xpRemaining > 0 ? (
-          <span>{xpRemaining} XP until Level {player.level + 1}</span>
-        ) : (
-          <span>Ready for Level Up! 🎉</span>
-        )}
-
+        <span>
+          {xpRemaining > 0
+            ? `${xpRemaining} XP until Level ${player.level + 1}`
+            : "Ready for Level Up! 🎉"}
+        </span>
         <span>{Math.round(progress)}%</span>
       </div>
     </div>
