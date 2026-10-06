@@ -8,26 +8,48 @@ import Ghost from "./pages/Ghost";
 import Boss from "./pages/Boss";
 import Shop from "./pages/Shop";
 import SettingsModal from "./components/SettingsModal";
+import { getPlayerData, savePlayerData } from "./utils/storage";
 
 function readInitialTheme() {
   try {
-    const raw = localStorage.getItem("typequest-player");
-    if (!raw) return "default";
-    const player = JSON.parse(raw);
-    return player?.equippedTheme ?? "default";
+    return getPlayerData().equippedTheme;
   } catch {
     return "default";
+  }
+}
+
+function readInitialColorMode() {
+  try {
+    return getPlayerData().colorMode === "light" ? "light" : "dark";
+  } catch {
+    return "dark";
   }
 }
 
 function App() {
   const [page, setPage] = useState("home");
   const [theme, setTheme] = useState(readInitialTheme);
+  const [colorMode, setColorMode] = useState(readInitialColorMode);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     document.body.dataset.theme = theme;
-  }, [theme]);
+    document.body.dataset.colorMode = colorMode;
+    document.documentElement.style.colorScheme = colorMode;
+  }, [theme, colorMode]);
+
+  const handleColorModeChange = (nextMode) => {
+    const normalizedMode = nextMode === "light" ? "light" : "dark";
+    setColorMode(normalizedMode);
+    savePlayerData({
+      ...getPlayerData(),
+      colorMode: normalizedMode,
+    });
+  };
+
+  const toggleColorMode = () => {
+    handleColorModeChange(colorMode === "dark" ? "light" : "dark");
+  };
 
   const goHome = () => setPage("home");
 
@@ -70,6 +92,8 @@ function App() {
           onBoss={() => setPage("boss")}
           onShop={() => setPage("shop")}
           onSettings={() => setSettingsOpen(true)}
+          onToggleColorMode={toggleColorMode}
+          colorMode={colorMode}
         />
       );
       break;
@@ -79,7 +103,11 @@ function App() {
     <>
       {content}
       {settingsOpen && (
-        <SettingsModal onClose={() => setSettingsOpen(false)} />
+        <SettingsModal
+          onClose={() => setSettingsOpen(false)}
+          colorMode={colorMode}
+          onColorModeChange={handleColorModeChange}
+        />
       )}
     </>
   );
