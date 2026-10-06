@@ -843,3 +843,296 @@ body[data-theme="cyber"] .shop-page { background: transparent; }
     transition-duration: .001ms !important;
   }
 }
+
+
+/* =========================
+   DARK / LIGHT COLOR MODE
+========================= */
+
+.color-mode-btn {
+  font-size: 18px;
+  display: inline-grid;
+  place-items: center;
+}
+
+.appearance-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 22px;
+  padding: 15px;
+  border: 1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.025);
+  border-radius: 14px;
+}
+
+.appearance-card > div:first-child span {
+  display: block;
+  color: #748196;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+
+.appearance-card > div:first-child strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 15px;
+}
+
+.mode-switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 11px;
+  background: rgba(255,255,255,.06);
+}
+
+.mode-switch-btn {
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 9px;
+  color: inherit;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.mode-switch-btn.active {
+  background: rgba(168,85,247,.2);
+  color: #fff;
+}
+
+/* Light mode */
+body[data-color-mode="light"] {
+  background: #f4f7fb;
+  color: #172033;
+}
+
+body[data-color-mode="light"][data-theme="neon"],
+body[data-color-mode="light"][data-theme="fire"],
+body[data-color-mode="light"][data-theme="ocean"],
+body[data-color-mode="light"][data-theme="cyber"] {
+  background: #f4f7fb;
+}
+
+body[data-color-mode="light"] .navbar {
+  background: rgba(255,255,255,.84);
+  border-bottom-color: rgba(15,23,42,.09);
+}
+
+body[data-color-mode="light"] .logo-button,
+body[data-color-mode="light"] .profile-btn,
+body[data-color-mode="light"] .coins,
+body[data-color-mode="light"] .level {
+  color: #172033;
+}
+
+body[data-color-mode="light"] .profile-btn,
+body[data-color-mode="light"] .icon-btn,
+body[data-color-mode="light"] .shop-btn,
+body[data-color-mode="light"] .equipped-btn {
+  border-color: rgba(15,23,42,.12);
+  background: rgba(15,23,42,.045);
+  color: #172033;
+}
+
+body[data-color-mode="light"] .profile-btn:hover,
+body[data-color-mode="light"] .icon-btn:hover,
+body[data-color-mode="light"] .shop-btn:hover {
+  background: rgba(15,23,42,.08);
+}
+
+body[data-color-mode="light"] .xp-bar {
+  background: #dfe5ef;
+}
+
+body[data-color-mode="light"] .hero-text,
+body[data-color-mode="light"] .xp-text,
+body[data-color-mode="light"] .level-footer,
+body[data-color-mode="light"] .section-heading > span,
+body[data-color-mode="light"] .profile-xp span,
+body[data-color-mode="light"] .stat-card p,
+body[data-color-mode="light"] .profile-stat small,
+body[data-color-mode="light"] .achievement-info p,
+body[data-color-mode="light"] .achievement-reward,
+body[data-color-mode="light"] .mode-card p,
+body[data-color-mode="light"] .empty-history,
+body[data-color-mode="light"] .history-row small,
+body[data-color-mode="light"] .daily-card span,
+body[data-color-mode="light"] .typing-hint,
+body[data-color-mode="light"] .speed-hint,
+body[data-color-mode="light"] .settings-note,
+body[data-color-mode="light"] .racer small {
+  color: #647084;
+}
+
+body[data-color-mode="light"] .level-section,
+body[data-color-mode="light"] .profile-card,
+body[data-color-mode="light"] .stat-card,
+body[data-color-mode="light"] .achievement-card,
+body[data-color-mode="light"] .mode-card,
+body[data-color-mode="light"] .daily-card,
+body[data-color-mode="light"] .recent-section,
+body[data-color-mode="light"] .live-stats > div,
+body[data-color-mode="light"] .result-stats > div,
+body[data-color-mode="light"] .typing-card,
+body[data-color-mode="light"] .speed-word-card,
+body[data-color-mode="light"] .racer,
+body[data-color-mode="light"] .boss-area,
+body[data-color-mode="light"] .survival-status > div,
+body[data-color-mode="light"] .boss-stats > div {
+  background: rgba(255,255,255,.9);
+  border-color: rgba(15,23,42,.09);
+  box-shadow: 0 14px 40px rgba(15,23,42,.08);
+}
+
+body[data-color-mode="light"] .level-section,
+body[data-color-mode="light"] .profile-card,
+body[data-color-mode="light"] .daily-card,
+body[data-color-mode="light"] .recent-section {
+  backdrop-filter: blur(16px);
+}
+
+body[data-color-mode="light"] .profile-avatar,
+body[data-color-mode="light"] .achievement-icon,
+body[data-color-mode="light"] .profile-stat,
+body[data-color-mode="light"] .settings-stat,
+body[data-color-mode="light"] .appearance-card,
+body[data-color-mode="light"] .mode-switch {
+  background: rgba(15,23,42,.04);
+  border-color: rgba(15,23,42,.08);
+}
+
+body[data-color-mode="light"] .typing-text {
+  color: #a0a9b7;
+}
+
+body[data-color-mode="light"] .typing-text .correct {
+  color: #172033;
+}
+
+body[data-color-mode="light"] .typing-text .current {
+  color: #7c3aed;
+  border-left-color: #7c3aed;
+}
+
+body[data-color-mode="light"] .typing-card textarea,
+body[data-color-mode="light"] .speed-word-card input {
+  background: #fff;
+  border-color: #cbd3df;
+  color: #172033;
+}
+
+body[data-color-mode="light"] .typing-card textarea::placeholder,
+body[data-color-mode="light"] .speed-word-card input::placeholder {
+  color: #93a0b2;
+}
+
+body[data-color-mode="light"] .daily-banner {
+  background: linear-gradient(135deg, rgba(124,58,237,.1), rgba(255,255,255,.86));
+  border-color: rgba(124,58,237,.18);
+}
+
+body[data-color-mode="light"] .daily-banner strong {
+  color: #334155;
+}
+
+body[data-color-mode="light"] .history-row {
+  background: rgba(15,23,42,.025);
+  border-color: rgba(15,23,42,.07);
+}
+
+body[data-color-mode="light"] .history-row span,
+body[data-color-mode="light"] .history-row strong,
+body[data-color-mode="light"] .mode-card h3,
+body[data-color-mode="light"] .achievement-info h3,
+body[data-color-mode="light"] .profile-info h2,
+body[data-color-mode="light"] .level-header h2,
+body[data-color-mode="light"] .section-heading h2,
+body[data-color-mode="light"] .game-title h1,
+body[data-color-mode="light"] .result-card h1,
+body[data-color-mode="light"] .speed-word-card h2,
+body[data-color-mode="light"] .combo-display strong,
+body[data-color-mode="light"] .survival-status strong,
+body[data-color-mode="light"] .boss-stats strong,
+body[data-color-mode="light"] .racer strong,
+body[data-color-mode="light"] .boss-character h2,
+body[data-color-mode="light"] .player-character h2 {
+  color: #172033;
+}
+
+body[data-color-mode="light"] .timer strong {
+  color: #172033;
+}
+
+body[data-color-mode="light"] .settings-modal {
+  background: #ffffff;
+  border-color: rgba(15,23,42,.1);
+  color: #172033;
+  box-shadow: 0 28px 80px rgba(15,23,42,.2);
+}
+
+body[data-color-mode="light"] .appearance-card {
+  color: #172033;
+}
+
+body[data-color-mode="light"] .mode-switch {
+  background: #eef1f6;
+}
+
+body[data-color-mode="light"] .mode-switch-btn {
+  color: #4b5567;
+}
+
+body[data-color-mode="light"] .mode-switch-btn.active {
+  background: #ffffff;
+  color: #172033;
+  box-shadow: 0 2px 8px rgba(15,23,42,.1);
+}
+
+body[data-color-mode="light"] .modal-backdrop {
+  background: rgba(15,23,42,.42);
+}
+
+body[data-color-mode="light"] .shop-page {
+  background: transparent;
+  color: #172033;
+}
+
+body[data-color-mode="light"] .shop-item {
+  background: rgba(255,255,255,.92);
+  border-color: rgba(15,23,42,.09);
+  box-shadow: 0 15px 42px rgba(15,23,42,.08);
+}
+
+body[data-color-mode="light"] .shop-item h2 {
+  color: #172033;
+}
+
+body[data-color-mode="light"] .shop-item p {
+  color: #647084;
+}
+
+body[data-color-mode="light"] .shop-coins,
+body[data-color-mode="light"] .shop-message {
+  background: rgba(255,255,255,.82);
+  border-color: rgba(15,23,42,.09);
+  color: #172033;
+}
+
+@media (max-width: 760px) {
+  .appearance-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .mode-switch {
+    width: 100%;
+  }
+
+  .mode-switch-btn {
+    flex: 1;
+  }
+}
