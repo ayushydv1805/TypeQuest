@@ -155,6 +155,8 @@ const [achievementMessage, setAchievementMessage] =
   combo: bestCombo,
   ghostWon: false,
   bossWon: false,
+  mode: "Survival",
+  score,
 });
 if (
   reward &&
