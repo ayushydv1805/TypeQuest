@@ -168,6 +168,8 @@ const [achievementMessage, setAchievementMessage] =
   combo: bestCombo,
   ghostWon: false,
   bossWon: bossHp <= 0,
+  mode: "Boss Battle",
+  score,
 });
 if (
   reward &&
