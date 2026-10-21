@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { typingTexts } from "../data/texts";
 import AchievementToast from "../components/AchievementToast";
+import TypingBox from "../components/TypingBox";
 import {
   calculateWPM,
   calculateAccuracy,
@@ -46,7 +47,7 @@ function Game({ onBack, daily = false }) {
   }, [time, started]);
 
   const handleTyping = (event) => {
-    const value = event.target.value;
+    const value = event.target.value.slice(0, text.length);
 
     if (!started) setStarted(true);
 
@@ -203,41 +204,7 @@ function Game({ onBack, daily = false }) {
         </div>
       </div>
 
-      <div className="typing-card">
-        <div className="typing-text" aria-label="Typing challenge text">
-          {text.split("").map((character, index) => {
-            let className = "";
-
-            if (index < input.length) {
-              className = input[index] === character ? "correct" : "incorrect";
-            }
-
-            if (index === input.length) className = "current";
-
-            return (
-              <span className={className} key={`${index}-${character}`}>
-                {character}
-              </span>
-            );
-          })}
-        </div>
-
-        <textarea
-          value={input}
-          onChange={handleTyping}
-          autoFocus
-          placeholder="Start typing here..."
-          disabled={finished}
-          spellCheck="false"
-          aria-label="Type the challenge text"
-        />
-
-        {!started && (
-          <p className="typing-hint">
-            Start typing to begin the timer ⚡
-          </p>
-        )}
-      </div>
+      <TypingBox text={text} value={input} onChange={handleTyping} disabled={finished} />
 
       <AchievementToast
         achievement={achievement}
