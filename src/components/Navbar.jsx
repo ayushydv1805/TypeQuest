@@ -1,4 +1,4 @@
-function Navbar({ player, onSettings, onToggleColorMode, colorMode }) {
+function Navbar({ player, user, onLogout, onSettings, onToggleColorMode, colorMode }) {
   const progress = Math.min(100, Math.max(0, player.xp));
   const isLight = colorMode === "light";
 
@@ -28,6 +28,11 @@ function Navbar({ player, onSettings, onToggleColorMode, colorMode }) {
         </div>
 
         <div className="coins">🪙 {player.coins}</div>
+
+        <div className="account-nav">
+          <span className="account-nav-name" title={user?.email || ""}>Hi, {user?.name || "Player"}</span>
+          <button className="account-nav-signout" type="button" onClick={onLogout} title="Sign out of this local profile">Sign out</button>
+        </div>
 
         <button
           className="profile-btn color-mode-btn"
