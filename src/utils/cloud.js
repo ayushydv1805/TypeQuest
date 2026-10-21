@@ -156,7 +156,6 @@ export async function signUpCloud({ name, email, password }) {
     email,
     password,
     data: { display_name: name },
-    gotrue_meta_security: { captcha_token: null },
   });
 
   if (!data.session?.access_token || !data.session?.refresh_token) {
@@ -213,8 +212,12 @@ export async function signInCloud({ email, password }) {
   storeSession(data);
   const profile = getCloudUserProfile();
 
-  // Load a cloud save before the UI opens, so a fresh local cache cannot overwrite it.
-  await restoreCloudPlayerSave(profile.id);
+  // Load cloud progress before the UI opens. Sign-in should still work if sync is temporarily unavailable.
+  try {
+    await restoreCloudPlayerSave(profile.id);
+  } catch {
+    // Keep the cached local save available if the database or network is unavailable.
+  }
   return profile;
 }
 
@@ -274,6 +277,39 @@ export async function restoreCloudPlayerSave(userId) {
   return player;
 }
 
+async function pushCloudLeaderboardEntry(playerData, session) {
+  const { url, apiKey } = getConfig();
+  const metadata = session.user.user_metadata || {};
+  const email = typeof session.user.email === "string" ? session.user.email : "";
+  const displayName =
+    typeof metadata.display_name === "string" && metadata.display_name.trim()
+      ? metadata.display_name.trim().slice(0, 40)
+      : (email.includes("@") ? email.split("@")[0] : "Player").slice(0, 40);
+
+  const response = await fetch(
+    url + "/rest/v1/typequest_leaderboard?on_conflict=user_id",
+    {
+      method: "POST",
+      headers: {
+        apikey: apiKey,
+        Authorization: "Bearer " + session.access_token,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates,return=minimal",
+      },
+      body: JSON.stringify({
+        user_id: session.user.id,
+        display_name: displayName || "Player",
+        best_wpm: Math.min(500, Math.max(0, Math.round(Number(playerData.bestWpm) || 0))),
+        level: Math.max(1, Math.round(Number(playerData.level) || 1)),
+        tests_completed: Math.max(0, Math.round(Number(playerData.testsCompleted) || 0)),
+        updated_at: new Date().toISOString(),
+      }),
+    }
+  );
+
+  await parseResponse(response);
+}
+
 export async function pushCloudPlayerSave(playerData) {
   if (!isCloudConfigured()) return false;
 
@@ -301,11 +337,80 @@ export async function pushCloudPlayerSave(playerData) {
     );
 
     await parseResponse(response);
+    // A leaderboard update is optional: never lose the private progress save if it fails.
+    try {
+      await pushCloudLeaderboardEntry(playerData, session);
+    } catch {
+      // This feature will remain unavailable until its RLS-protected table is installed.
+    }
     return true;
   } catch {
     // Local progress is saved first; cloud sync can retry on the next save/login.
     return false;
   }
+}
+
+export async function deleteCloudPlayerSave() {
+  if (!isCloudConfigured() || !getCloudUserId()) return true;
+
+  try {
+    const session = await ensureCloudSession();
+    if (!session) return false;
+
+    const { url, apiKey } = getConfig();
+    const query = new URLSearchParams({ user_id: "eq." + session.user.id });
+    const response = await fetch(
+      url + "/rest/v1/typequest_player_saves?" + query.toString(),
+      {
+        method: "DELETE",
+        headers: {
+          apikey: apiKey,
+          Authorization: "Bearer " + session.access_token,
+          Prefer: "return=minimal",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      await parseResponse(response);
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function fetchCloudLeaderboard() {
+  if (!isCloudConfigured()) {
+    throw new Error("Cloud leaderboard needs Supabase configuration. See .env.example and supabase/migrations.");
+  }
+
+  const session = await ensureCloudSession();
+  if (!session) throw new Error("Sign in to view the cloud leaderboard.");
+
+  const { url, apiKey } = getConfig();
+  const query = new URLSearchParams({
+    select: "display_name,best_wpm,level,tests_completed,updated_at",
+    order: "best_wpm.desc,level.desc,tests_completed.desc",
+    limit: "50",
+  });
+  const response = await fetch(url + "/rest/v1/typequest_leaderboard?" + query.toString(), {
+    headers: {
+      apikey: apiKey,
+      Authorization: "Bearer " + session.access_token,
+    },
+  });
+  const rows = await parseResponse(response);
+
+  if (!Array.isArray(rows)) throw new Error("The leaderboard response was not valid.");
+  return rows.map((row) => ({
+    displayName: typeof row.display_name === "string" ? row.display_name : "Player",
+    bestWpm: Math.min(500, Math.max(0, Math.round(Number(row.best_wpm) || 0))),
+    level: Math.max(1, Math.round(Number(row.level) || 1)),
+    testsCompleted: Math.max(0, Math.round(Number(row.tests_completed) || 0)),
+    updatedAt: typeof row.updated_at === "string" ? row.updated_at : "",
+  }));
 }
 
 let syncTimer = null;
