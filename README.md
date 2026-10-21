@@ -31,3 +31,14 @@ npm run preview
 ```
 
 The project is a client-side app, so player progress is intentionally stored in the browser using localStorage.
+
+
+## Profiles and saved progress
+
+TypeQuest now opens with a local profile sign-in/create screen. Each profile has separate progress, levels, coins, achievements, themes, settings and recent runs. The active session and completed-run progress are saved in local storage and persist when the app is closed and reopened. The legacy single-player save is migrated into the first profile that signs in.
+
+**Important:** this is device-local sign-in, not cloud authentication. Profiles do not sync between phones or browsers, and clearing the app/browser data may remove local saves. A backend account and cloud sync can be added when the project is prepared for a public release.
+
+## Mobile / install metadata
+
+A web app manifest is included as a first step toward an installable web experience and later Android packaging.
