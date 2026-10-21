@@ -57,6 +57,7 @@ function WeakPractice({ onBack }) {
   const [levelUp, setLevelUp] = useState(false);
   const characterErrorsRef = useRef({});
   const [errors, setErrors] = useState(0);
+  const [recordedMistakes, setRecordedMistakes] = useState(0);
 
   useEffect(() => {
     if (!started || finished || time <= 0) return undefined;
@@ -90,6 +91,7 @@ function WeakPractice({ onBack }) {
 
     setInput(value);
     setErrors(mistakes);
+    setRecordedMistakes(Object.values(characterErrorsRef.current).reduce((sum, count) => sum + count, 0));
 
     if (value === text) setFinished(true);
   };
@@ -147,8 +149,6 @@ function WeakPractice({ onBack }) {
       </div>
     );
   }
-
-  const recordedMistakes = Object.values(characterErrorsRef.current).reduce((sum, count) => sum + count, 0);
 
   return (
     <div className="game-page">
