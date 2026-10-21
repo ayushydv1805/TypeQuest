@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect -- Leaderboard data is fetched asynchronously from the cloud service. */
 import { useEffect, useState } from "react";
 import { fetchCloudLeaderboard, getCloudUserId, isCloudConfigured } from "../utils/cloud";
 
