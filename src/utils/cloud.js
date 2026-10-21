@@ -151,14 +151,16 @@ export function getCloudUserProfile() {
 }
 
 export async function signUpCloud({ name, email, password }) {
-  const { url } = getConfig();
   const data = await authRequest("signup", {
     email,
     password,
     data: { display_name: name },
   });
 
-  if (!data.session?.access_token || !data.session?.refresh_token) {
+  // GoTrue's REST signup response returns tokens at the root when email confirmation
+  // is disabled, while SDK-shaped responses may wrap them in "session".
+  const tokenResponse = data.session || data;
+  if (!tokenResponse.access_token || !tokenResponse.refresh_token) {
     return {
       profile: null,
       requiresEmailConfirmation: true,
@@ -168,7 +170,7 @@ export async function signUpCloud({ name, email, password }) {
     };
   }
 
-  storeSession({ ...data.session, user: data.user || data.session.user });
+  storeSession({ ...tokenResponse, user: data.user || tokenResponse.user });
   return {
     profile: getCloudUserProfile(),
     requiresEmailConfirmation: false,
@@ -359,21 +361,23 @@ export async function deleteCloudPlayerSave() {
 
     const { url, apiKey } = getConfig();
     const query = new URLSearchParams({ user_id: "eq." + session.user.id });
-    const response = await fetch(
-      url + "/rest/v1/typequest_player_saves?" + query.toString(),
-      {
-        method: "DELETE",
-        headers: {
-          apikey: apiKey,
-          Authorization: "Bearer " + session.access_token,
-          Prefer: "return=minimal",
-        },
-      }
-    );
+    for (const table of ["typequest_player_saves", "typequest_leaderboard"]) {
+      const response = await fetch(
+        url + "/rest/v1/" + table + "?" + query.toString(),
+        {
+          method: "DELETE",
+          headers: {
+            apikey: apiKey,
+            Authorization: "Bearer " + session.access_token,
+            Prefer: "return=minimal",
+          },
+        }
+      );
 
-    if (!response.ok) {
-      await parseResponse(response);
-      return false;
+      if (!response.ok) {
+        await parseResponse(response);
+        return false;
+      }
     }
     return true;
   } catch {
