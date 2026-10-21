@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createLocalAccount, signInLocalAccount } from "../utils/auth";
+import { isCloudConfigured } from "../utils/cloud";
 import "./auth.css";
 
 function AuthGate({ onAuthenticated }) {
@@ -9,6 +10,7 @@ function AuthGate({ onAuthenticated }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
 
   const handleSubmit = async (event) => {
@@ -20,12 +22,31 @@ function AuthGate({ onAuthenticated }) {
       return;
     }
 
+    setNotice("");
     setBusy(true);
     try {
-      const profile = isCreating
-        ? await createLocalAccount({ name, email, password })
-        : await signInLocalAccount({ email, password });
-      onAuthenticated(profile);
+      if (isCreating) {
+        const created = await createLocalAccount({ name, email, password });
+        if (created?.requiresEmailConfirmation) {
+          setNotice(
+            created.confirmationMessage ||
+              "Check your email to confirm your account, then sign in."
+          );
+          setIsCreating(false);
+          setPassword("");
+          setConfirmPassword("");
+          return;
+        }
+
+        const profile = created?.profile || created;
+        if (!profile?.id) {
+          throw new Error("The account was created but sign-in could not be completed. Try signing in.");
+        }
+        onAuthenticated(profile);
+      } else {
+        const profile = await signInLocalAccount({ email, password });
+        onAuthenticated(profile);
+      }
     } catch (submitError) {
       setError(
         submitError instanceof Error
@@ -40,6 +61,7 @@ function AuthGate({ onAuthenticated }) {
   const switchMode = () => {
     setIsCreating((current) => !current);
     setError("");
+    setNotice("");
     setPassword("");
     setConfirmPassword("");
   };
@@ -121,6 +143,7 @@ function AuthGate({ onAuthenticated }) {
           )}
 
           {error && <p className="auth-error" role="alert">{error}</p>}
+          {notice && <p className="auth-notice" role="status">{notice}</p>}
 
           <button className="auth-submit" type="submit" disabled={busy}>
             {busy
@@ -141,11 +164,11 @@ function AuthGate({ onAuthenticated }) {
         <div className="auth-local-note">
           <span aria-hidden="true">🔒</span>
           <p>
-            <strong>Device-local profile</strong>
+            <strong>{isCloudConfigured() ? "Cloud account and private saves" : "Device-local profile"}</strong>
             <br />
-            Your password verifier, scores, XP, themes, and history are stored on this device.
-            This is not cloud login yet, so profiles do not sync between devices. Clearing app
-            or browser data can erase local saves.
+            {isCloudConfigured()
+              ? "Your account uses Supabase Auth and saves sync to your TypeQuest cloud database when configured. Keep your password private."
+              : "Profiles, passwords verifiers, scores, XP, themes and history stay on this device. Cloud sync is ready to configure using .env.example; browser/app data clearing may erase local saves."}
           </p>
         </div>
       </section>
