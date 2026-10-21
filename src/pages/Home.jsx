@@ -3,6 +3,7 @@ import LevelBar from "../components/LevelBar";
 import Stats from "../components/Stats";
 import ProfileCard from "../components/ProfileCard";
 import Achievements from "../components/Achievements";
+import ProgressInsights from "../components/ProgressInsights";
 import { getPlayerData } from "../utils/storage";
 
 function Home({
@@ -15,6 +16,8 @@ function Home({
   onSurvival,
   onGhost,
   onBoss,
+  onWeakPractice,
+  onLeaderboard,
   onShop,
   onSettings,
   onToggleColorMode,
@@ -50,12 +53,19 @@ function Home({
             <button className="shop-btn" onClick={onShop}>
               🛒 SHOP
             </button>
+            <button className="shop-btn" onClick={onWeakPractice}>
+              ⌨️ WEAK-KEY DRILLS
+            </button>
           </div>
         </section>
 
         <LevelBar player={player} />
         <ProfileCard />
         <Stats />
+        <ProgressInsights
+          onPracticeWeakCharacters={onWeakPractice}
+          onOpenLeaderboard={onLeaderboard}
+        />
         <Achievements />
 
         <section className="daily-card">
