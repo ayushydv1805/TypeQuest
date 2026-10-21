@@ -353,6 +353,9 @@ export async function pushCloudPlayerSave(playerData) {
 }
 
 export async function deleteCloudPlayerSave() {
+  if (syncTimer !== null) window.clearTimeout(syncTimer);
+  syncTimer = null;
+  pendingPlayerData = null;
   if (!isCloudConfigured() || !getCloudUserId()) return true;
 
   try {
