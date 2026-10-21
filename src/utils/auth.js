@@ -1,3 +1,12 @@
+import {
+  getCloudUserId,
+  getCloudUserProfile,
+  isCloudConfigured,
+  signInCloud,
+  signOutCloud,
+  signUpCloud,
+} from "./cloud";
+
 const ACCOUNTS_KEY = "typequest-local-accounts-v1";
 const SESSION_KEY = "typequest-active-account-v1";
 const PASSWORD_ITERATIONS = 120000;
@@ -97,6 +106,7 @@ function publicProfile(account) {
     name: account.name,
     email: account.email,
     createdAt: account.createdAt,
+    authMode: "local",
   };
 }
 
@@ -109,6 +119,9 @@ function activateAccount(storage, accountId) {
 }
 
 export function getActiveUserId() {
+  const cloudUserId = getCloudUserId();
+  if (cloudUserId) return cloudUserId;
+
   try {
     const storage = getStorage();
     if (!storage) return null;
@@ -129,6 +142,9 @@ export function getActiveUserId() {
 }
 
 export function getActiveUser() {
+  const cloudProfile = getCloudUserProfile();
+  if (cloudProfile) return cloudProfile;
+
   const accountId = getActiveUserId();
   if (!accountId) return null;
 
@@ -152,6 +168,14 @@ export async function createLocalAccount({ name, email, password }) {
   }
   if (cleanPassword.length < 8 || cleanPassword.length > 128) {
     throw new Error("Use a password between 8 and 128 characters.");
+  }
+
+  if (isCloudConfigured()) {
+    return signUpCloud({
+      name: cleanName,
+      email: cleanEmail,
+      password: cleanPassword,
+    });
   }
 
   const storage = requireStorage();
@@ -196,6 +220,11 @@ export async function createLocalAccount({ name, email, password }) {
 export async function signInLocalAccount({ email, password }) {
   const cleanEmail = String(email || "").trim().toLowerCase();
   const cleanPassword = String(password || "");
+
+  if (isCloudConfigured()) {
+    return signInCloud({ email: cleanEmail, password: cleanPassword });
+  }
+
   const storage = requireStorage();
   const account = readAccounts(storage).find((item) => item.email === cleanEmail);
 
@@ -212,11 +241,12 @@ export async function signInLocalAccount({ email, password }) {
   return publicProfile(account);
 }
 
-export function signOutLocalUser() {
+export async function signOutLocalUser() {
   try {
     const storage = getStorage();
     if (storage) storage.removeItem(SESSION_KEY);
   } catch {
     // Keep the app usable if browser storage has been disabled.
   }
+  await signOutCloud();
 }
