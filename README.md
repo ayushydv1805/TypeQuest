@@ -42,3 +42,16 @@ TypeQuest now opens with a local profile sign-in/create screen. Each profile has
 ## Mobile / install metadata
 
 A web app manifest is included as a first step toward an installable web experience and later Android packaging.
+
+
+## Cloud auth, backup and insights
+
+TypeQuest supports optional Supabase Auth when VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY are configured. The app uses its public client key only; the Supabase migration in supabase/migrations/ creates the private per-user save table and an authenticated leaderboard with row-level security. Never put a service-role/secret key into a Vite environment variable.
+
+Copy .env.example to .env.local, set the values for a dedicated TypeQuest Supabase project, and apply supabase/migrations/20261022000000_typequest_cloud_saves_and_leaderboard.sql in that project's SQL Editor. Without those values the app remains usable with device-local accounts and saves, but cloud sync and the leaderboard remain disabled. Use JSON Backup & Restore in Settings to move a local save between devices.
+
+Typing Insights show recent WPM and characters most often mistyped. Weak-key practice generates a drill using the current mistake profile. The learner's progress is saved after the drill.
+
+## Android APK
+
+See ANDROID_BUILD.md for Capacitor setup, Android Studio instructions, and pre-release tests.
