@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import AuthGate from "./components/AuthGate";
 import Home from "./pages/Home";
 import Game from "./pages/Game";
 import SpeedRush from "./pages/SpeedRush";
@@ -9,6 +10,7 @@ import Boss from "./pages/Boss";
 import Shop from "./pages/Shop";
 import SettingsModal from "./components/SettingsModal";
 import { getPlayerData, savePlayerData } from "./utils/storage";
+import { getActiveUser, signOutLocalUser } from "./utils/auth";
 
 function readInitialTheme() {
   try {
@@ -27,6 +29,7 @@ function readInitialColorMode() {
 }
 
 function App() {
+  const [user, setUser] = useState(getActiveUser);
   const [page, setPage] = useState("home");
   const [theme, setTheme] = useState(readInitialTheme);
   const [colorMode, setColorMode] = useState(readInitialColorMode);
@@ -37,6 +40,20 @@ function App() {
     document.body.dataset.colorMode = colorMode;
     document.documentElement.style.colorScheme = colorMode;
   }, [theme, colorMode]);
+
+  const handleAuthenticated = (profile) => {
+    setUser(profile);
+    setPage("home");
+    setTheme(readInitialTheme());
+    setColorMode(readInitialColorMode());
+  };
+
+  const handleLogout = () => {
+    signOutLocalUser();
+    setUser(null);
+    setPage("home");
+    setSettingsOpen(false);
+  };
 
   const handleColorModeChange = (nextMode) => {
     const normalizedMode = nextMode === "light" ? "light" : "dark";
@@ -52,6 +69,10 @@ function App() {
   };
 
   const goHome = () => setPage("home");
+
+  if (!user) {
+    return <AuthGate onAuthenticated={handleAuthenticated} />;
+  }
 
   let content;
 
@@ -83,6 +104,8 @@ function App() {
     default:
       content = (
         <Home
+          user={user}
+          onLogout={handleLogout}
           onStart={() => setPage("classic")}
           onDaily={() => setPage("daily")}
           onSpeed={() => setPage("speed")}
