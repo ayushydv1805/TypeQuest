@@ -20,7 +20,7 @@ function SettingsModal({ onClose, colorMode, onColorModeChange }) {
 
   const handleReset = () => {
     const confirmed = window.confirm(
-      "Reset all TypeQuest progress, coins, achievements, themes and stats?"
+      "Reset this profile's progress, coins, achievements, themes and stats?"
     );
 
     if (!confirmed) return;
@@ -108,7 +108,7 @@ function SettingsModal({ onClose, colorMode, onColorModeChange }) {
         </div>
 
         <div className="settings-note">
-          Your theme and light/dark preference are saved locally in this browser, so your choice stays after a refresh.
+          This profile's XP, scores, achievements, unlocks, run history, theme and appearance are saved on this device and remain after closing and reopening TypeQuest. Local profiles do not sync across devices, and clearing app or browser data can erase local saves.
         </div>
 
         <button className="danger-btn" onClick={handleReset}>
