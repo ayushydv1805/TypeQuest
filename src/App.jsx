@@ -48,8 +48,8 @@ function App() {
     setColorMode(readInitialColorMode());
   };
 
-  const handleLogout = () => {
-    signOutLocalUser();
+  const handleLogout = async () => {
+    await signOutLocalUser();
     setUser(null);
     setPage("home");
     setSettingsOpen(false);
