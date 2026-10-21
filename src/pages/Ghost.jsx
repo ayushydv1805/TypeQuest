@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect -- Timer completion and one-time reward saving intentionally update the game UI from effects. */
 import { useEffect, useRef, useState } from "react";
 import { completeGame, getPlayerData } from "../utils/storage";
+import { accumulateCharacterMistakes } from "../utils/gamelogic";
 
 const words = [
   "keyboard",
