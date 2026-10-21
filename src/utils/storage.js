@@ -1,6 +1,7 @@
 import { achievements } from "./achievements";
 import { getDateKey } from "./gamelogic";
 import { getActiveUserId } from "./auth";
+import { deleteCloudPlayerSave, queueCloudPlayerSave } from "./cloud";
 
 const PLAYER_KEY = "typequest-player";
 const MAX_RECENT_RUNS = 8;
@@ -22,6 +23,7 @@ function createDefaultPlayer() {
     unlockedModes: ["classic"],
     unlockedAchievements: [],
     unlockedThemes: [],
+    characterErrors: {},
     equippedTheme: "default",
     colorMode: "dark",
   };
@@ -52,6 +54,17 @@ function normalizeRecentRuns(value) {
     }));
 }
 
+function normalizeCharacterErrors(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([character, count]) => /^[a-z0-9]$/i.test(character) && Number.isFinite(Number(count)))
+      .map(([character, count]) => [character.toLowerCase(), Math.min(1000000, Math.max(0, Math.floor(Number(count))))])
+      .filter(([, count]) => count > 0)
+      .slice(0, 36)
+  );
+}
+
 function normalizePlayer(player = {}) {
   const base = createDefaultPlayer();
   const unlockedModes = uniqueStrings(player.unlockedModes, ["classic"]);
@@ -73,6 +86,7 @@ function normalizePlayer(player = {}) {
     unlockedModes: [...new Set(["classic", ...unlockedModes])],
     unlockedAchievements: uniqueStrings(player.unlockedAchievements),
     unlockedThemes: uniqueStrings(player.unlockedThemes).filter((theme) => THEMES.includes(theme)),
+    characterErrors: normalizeCharacterErrors(player.characterErrors),
     equippedTheme: THEMES.includes(player.equippedTheme) ? player.equippedTheme : "default",
     colorMode: player.colorMode === "light" ? "light" : "dark",
   };
@@ -105,6 +119,7 @@ export function getPlayerData() {
           const migrated = normalizePlayer(JSON.parse(legacyRaw));
           storage.setItem(key, JSON.stringify(migrated));
           storage.removeItem(PLAYER_KEY);
+          queueCloudPlayerSave(migrated);
           return migrated;
         } catch {
           // A malformed legacy save should not prevent a new profile from playing.
@@ -120,23 +135,27 @@ export function getPlayerData() {
 
 export function savePlayerData(data) {
   try {
+    const normalized = normalizePlayer(data);
     window.localStorage.setItem(
       getPlayerStorageKey(),
-      JSON.stringify(normalizePlayer(data))
+      JSON.stringify(normalized)
     );
+    queueCloudPlayerSave(normalized);
     return true;
   } catch {
     return false;
   }
 }
 
-export function resetPlayerData() {
+export async function resetPlayerData() {
   try {
     window.localStorage.removeItem(getPlayerStorageKey());
-    return true;
   } catch {
     return false;
   }
+
+  const cloudDeleted = await deleteCloudPlayerSave();
+  return cloudDeleted;
 }
 
 function updateStreak(player) {
@@ -162,6 +181,7 @@ export function completeGame({
   mode = "Classic",
   score = 0,
   daily = false,
+  characterErrors = {},
 }) {
   const player = getPlayerData();
   const today = getDateKey();
@@ -174,6 +194,14 @@ export function completeGame({
   player.coins += earnedCoins;
   player.testsCompleted += 1;
   player.totalTime += Math.max(0, numberOr(time));
+
+  const normalizedErrors = normalizeCharacterErrors(characterErrors);
+  for (const [character, count] of Object.entries(normalizedErrors)) {
+    player.characterErrors[character] = Math.min(
+      1000000,
+      (player.characterErrors[character] || 0) + count
+    );
+  }
 
   if (daily && !dailyAlreadyRewarded) {
     player.lastDailyDate = today;
