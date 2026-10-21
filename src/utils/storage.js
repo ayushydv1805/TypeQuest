@@ -1,8 +1,10 @@
 import { achievements } from "./achievements";
 import { getDateKey } from "./gamelogic";
+import { getActiveUserId } from "./auth";
 
 const PLAYER_KEY = "typequest-player";
 const MAX_RECENT_RUNS = 8;
+const THEMES = ["default", "neon", "fire", "ocean", "cyber"];
 
 function createDefaultPlayer() {
   return {
@@ -29,8 +31,30 @@ function numberOr(value, fallback = 0) {
   return Number.isFinite(Number(value)) ? Number(value) : fallback;
 }
 
+function uniqueStrings(value, fallback = []) {
+  if (!Array.isArray(value)) return fallback;
+  return [...new Set(value.filter((item) => typeof item === "string"))];
+}
+
+function normalizeRecentRuns(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((run) => run && typeof run === "object")
+    .slice(0, MAX_RECENT_RUNS)
+    .map((run, index) => ({
+      id: typeof run.id === "string" ? run.id : "saved-run-" + index,
+      date: typeof run.date === "string" ? run.date : "",
+      mode: typeof run.mode === "string" ? run.mode : "Classic",
+      wpm: Math.max(0, Math.round(numberOr(run.wpm))),
+      accuracy: Math.min(100, Math.max(0, Math.round(numberOr(run.accuracy)))),
+      score: Math.max(0, Math.round(numberOr(run.score))),
+      xp: Math.max(0, Math.round(numberOr(run.xp))),
+    }));
+}
+
 function normalizePlayer(player = {}) {
   const base = createDefaultPlayer();
+  const unlockedModes = uniqueStrings(player.unlockedModes, ["classic"]);
 
   return {
     ...base,
@@ -45,40 +69,74 @@ function normalizePlayer(player = {}) {
     currentStreak: Math.max(0, Math.floor(numberOr(player.currentStreak, 0))),
     lastPlayedDate: typeof player.lastPlayedDate === "string" ? player.lastPlayedDate : "",
     lastDailyDate: typeof player.lastDailyDate === "string" ? player.lastDailyDate : "",
-    recentRuns: Array.isArray(player.recentRuns) ? player.recentRuns.slice(0, MAX_RECENT_RUNS) : [],
-    unlockedModes:
-      Array.isArray(player.unlockedModes) && player.unlockedModes.length
-        ? [...new Set(["classic", ...player.unlockedModes])]
-        : ["classic"],
-    unlockedAchievements: Array.isArray(player.unlockedAchievements)
-      ? [...new Set(player.unlockedAchievements)]
-      : [],
-    unlockedThemes: Array.isArray(player.unlockedThemes)
-      ? [...new Set(player.unlockedThemes)]
-      : [],
-    equippedTheme:
-      typeof player.equippedTheme === "string" ? player.equippedTheme : "default",
+    recentRuns: normalizeRecentRuns(player.recentRuns),
+    unlockedModes: [...new Set(["classic", ...unlockedModes])],
+    unlockedAchievements: uniqueStrings(player.unlockedAchievements),
+    unlockedThemes: uniqueStrings(player.unlockedThemes).filter((theme) => THEMES.includes(theme)),
+    equippedTheme: THEMES.includes(player.equippedTheme) ? player.equippedTheme : "default",
     colorMode: player.colorMode === "light" ? "light" : "dark",
   };
 }
 
+function getPlayerStorageKey(userId = getActiveUserId()) {
+  return userId ? PLAYER_KEY + ":" + userId : PLAYER_KEY;
+}
+
 export function getPlayerData() {
   try {
-    const raw = localStorage.getItem(PLAYER_KEY);
-    if (!raw) return createDefaultPlayer();
+    const storage = window.localStorage;
+    const userId = getActiveUserId();
+    const key = getPlayerStorageKey(userId);
+    const raw = storage.getItem(key);
 
-    return normalizePlayer(JSON.parse(raw));
+    if (raw) {
+      try {
+        return normalizePlayer(JSON.parse(raw));
+      } catch {
+        return createDefaultPlayer();
+      }
+    }
+
+    // One-time migration of the old single-player save into the first profile.
+    if (userId) {
+      const legacyRaw = storage.getItem(PLAYER_KEY);
+      if (legacyRaw) {
+        try {
+          const migrated = normalizePlayer(JSON.parse(legacyRaw));
+          storage.setItem(key, JSON.stringify(migrated));
+          storage.removeItem(PLAYER_KEY);
+          return migrated;
+        } catch {
+          // A malformed legacy save should not prevent a new profile from playing.
+        }
+      }
+    }
   } catch {
-    return createDefaultPlayer();
+    // Continue with a fresh in-memory profile when storage is blocked/unavailable.
   }
+
+  return createDefaultPlayer();
 }
 
 export function savePlayerData(data) {
-  localStorage.setItem(PLAYER_KEY, JSON.stringify(normalizePlayer(data)));
+  try {
+    window.localStorage.setItem(
+      getPlayerStorageKey(),
+      JSON.stringify(normalizePlayer(data))
+    );
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function resetPlayerData() {
-  localStorage.removeItem(PLAYER_KEY);
+  try {
+    window.localStorage.removeItem(getPlayerStorageKey());
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function updateStreak(player) {
@@ -121,18 +179,21 @@ export function completeGame({
     player.lastDailyDate = today;
   }
 
-  if (wpm > player.bestWpm) player.bestWpm = wpm;
-  if (accuracy > player.bestAccuracy) player.bestAccuracy = accuracy;
+  if (numberOr(wpm) > player.bestWpm) player.bestWpm = numberOr(wpm);
+  if (numberOr(accuracy) > player.bestAccuracy) {
+    player.bestAccuracy = Math.min(100, numberOr(accuracy));
+  }
 
   updateStreak(player);
 
   const stats = {
-    wpm,
-    accuracy,
-    combo,
-    survivalTime: time,
-    ghostWon,
-    bossWon,
+    wpm: numberOr(wpm),
+    accuracy: numberOr(accuracy),
+    combo: numberOr(combo),
+    // Only Survival mode should grant the Survival achievement.
+    survivalTime: mode === "Survival" ? numberOr(time) : 0,
+    ghostWon: Boolean(ghostWon),
+    bossWon: Boolean(bossWon),
   };
 
   const newlyUnlocked = [...checkAchievements(player, stats)];
@@ -150,7 +211,7 @@ export function completeGame({
   updateUnlockedModes(player);
 
   player.recentRuns.unshift({
-    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    id: Date.now() + "-" + Math.random().toString(16).slice(2),
     date: today,
     mode,
     wpm: Math.round(numberOr(wpm)),
@@ -160,13 +221,14 @@ export function completeGame({
   });
 
   player.recentRuns = player.recentRuns.slice(0, MAX_RECENT_RUNS);
-  savePlayerData(player);
+  const saved = savePlayerData(player);
 
   return {
     player,
     leveledUp,
     newlyUnlocked,
     dailyRewarded: daily ? !dailyAlreadyRewarded : false,
+    saved,
   };
 }
 
