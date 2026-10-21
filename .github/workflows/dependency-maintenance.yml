@@ -36,6 +36,8 @@ jobs:
         run: npm audit --audit-level=high
       - name: Run ESLint
         run: npm run lint
+      - name: Run typing regression tests
+        run: npm test
       - name: Build production bundle
         run: npm run build
       - name: Commit updated lockfile
