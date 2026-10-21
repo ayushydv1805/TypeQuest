@@ -2,7 +2,7 @@ name: TypeQuest CI
 
 on:
   push:
-    branches: [main, fix/login-persistence]
+    branches: [main]
   pull_request:
     branches: [main]
 
