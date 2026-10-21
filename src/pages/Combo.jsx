@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect -- Timer completion and one-time reward saving intentionally update the game UI from effects. */
 import { useEffect, useState } from "react";
 import { completeGame } from "../utils/storage";
 
@@ -176,6 +177,8 @@ if (
     wpm,
     accuracy,
     elapsedTime,
+    bestCombo,
+    score,
   ]);
 
   const restart = () => {
