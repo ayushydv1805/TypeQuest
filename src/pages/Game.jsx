@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect -- Timer completion and one-time reward saving intentionally update the game UI from effects. */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { typingTexts } from "../data/texts";
 import AchievementToast from "../components/AchievementToast";
 import TypingBox from "../components/TypingBox";
@@ -9,7 +9,7 @@ import {
   calculateScore,
   calculateXP,
   getDailyChallengeIndex,
-  getCharacterErrorCounts,
+  accumulateCharacterMistakes,
 } from "../utils/gamelogic";
 import { completeGame } from "../utils/storage";
 
@@ -23,6 +23,7 @@ function Game({ onBack, daily = false }) {
   });
 
   const [input, setInput] = useState("");
+  const characterErrorsRef = useRef({});
   const [time, setTime] = useState(60);
   const [started, setStarted] = useState(false);
   const [finished, setFinished] = useState(false);
@@ -50,6 +51,7 @@ function Game({ onBack, daily = false }) {
 
   const handleTyping = (event) => {
     const value = event.target.value.slice(0, text.length);
+    characterErrorsRef.current = accumulateCharacterMistakes(input, value, text, characterErrorsRef.current);
 
     if (!started) setStarted(true);
 
@@ -92,7 +94,7 @@ function Game({ onBack, daily = false }) {
       mode: daily ? "Daily Challenge" : "Classic",
       score,
       daily,
-      characterErrors: getCharacterErrorCounts(text, input),
+      characterErrors: characterErrorsRef.current,
     });
 
     setLevelUp(result.leveledUp);
