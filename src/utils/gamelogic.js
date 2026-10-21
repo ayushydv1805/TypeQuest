@@ -39,3 +39,22 @@ export function getDailyChallengeIndex(length, date = new Date()) {
 
   return Math.abs(hash) % length;
 }
+
+
+export function getCharacterErrorCounts(targetText, typedText) {
+  const errors = {};
+  const target = String(targetText || "");
+  const typed = String(typedText || "");
+  const length = Math.min(target.length, typed.length);
+
+  for (let index = 0; index < length; index += 1) {
+    if (typed[index] === target[index]) continue;
+
+    const expected = target[index].toLowerCase();
+    if (!/^[a-z0-9]$/.test(expected)) continue;
+
+    errors[expected] = (errors[expected] || 0) + 1;
+  }
+
+  return errors;
+}
