@@ -1,0 +1,18 @@
+{
+  "name": "TypeQuest — Typing RPG",
+  "short_name": "TypeQuest",
+  "description": "A gamified typing trainer with quests, streaks, achievements and boss battles.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b0f19",
+  "theme_color": "#0b0f19",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
