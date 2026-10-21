@@ -28,5 +28,7 @@ jobs:
           node -e "const report = require('./npm-audit-report.json'); const findings = Object.entries(report.vulnerabilities || {}).map(([name, item]) => ({ name, severity: item.severity, range: item.range, fixAvailable: item.fixAvailable, via: item.via.map((entry) => typeof entry === 'string' ? entry : entry.title) })); console.log(JSON.stringify({ summary: report.metadata && report.metadata.vulnerabilities, findings }, null, 2));"
       - name: Run ESLint
         run: npm run lint
+      - name: Run typing regression tests
+        run: npm test
       - name: Create production build
         run: npm run build
