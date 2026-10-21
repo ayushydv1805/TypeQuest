@@ -398,7 +398,7 @@ export async function fetchCloudLeaderboard() {
 
   const { url, apiKey } = getConfig();
   const query = new URLSearchParams({
-    select: "display_name,best_wpm,level,tests_completed,updated_at",
+    select: "user_id,display_name,best_wpm,level,tests_completed,updated_at",
     order: "best_wpm.desc,level.desc,tests_completed.desc",
     limit: "50",
   });
@@ -412,6 +412,7 @@ export async function fetchCloudLeaderboard() {
 
   if (!Array.isArray(rows)) throw new Error("The leaderboard response was not valid.");
   return rows.map((row) => ({
+    userId: typeof row.user_id === "string" ? row.user_id : "",
     displayName: typeof row.display_name === "string" ? row.display_name : "Player",
     bestWpm: Math.min(500, Math.max(0, Math.round(Number(row.best_wpm) || 0))),
     level: Math.max(1, Math.round(Number(row.level) || 1)),
