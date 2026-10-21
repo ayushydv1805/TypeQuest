@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect -- Resolve auth redirects asynchronously before rendering protected app content. */
 import { useEffect, useState } from "react";
 import AuthGate from "./components/AuthGate";
 import Home from "./pages/Home";
