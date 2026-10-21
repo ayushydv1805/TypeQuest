@@ -43,6 +43,9 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
+      - name: Run typing regression tests
+        run: npm test
+
       - name: Build the web app
         run: npm run build
 
