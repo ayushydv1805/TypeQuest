@@ -7,6 +7,8 @@ import Combo from "./pages/Combo";
 import Survival from "./pages/Survival";
 import Ghost from "./pages/Ghost";
 import Boss from "./pages/Boss";
+import WeakPractice from "./pages/WeakPractice";
+import Leaderboard from "./pages/Leaderboard";
 import Shop from "./pages/Shop";
 import SettingsModal from "./components/SettingsModal";
 import { getPlayerData, savePlayerData } from "./utils/storage";
@@ -98,6 +100,12 @@ function App() {
     case "boss":
       content = <Boss onBack={goHome} />;
       break;
+    case "weak-practice":
+      content = <WeakPractice onBack={goHome} />;
+      break;
+    case "leaderboard":
+      content = <Leaderboard onBack={goHome} />;
+      break;
     case "shop":
       content = <Shop onBack={goHome} onThemeChange={setTheme} />;
       break;
@@ -113,6 +121,8 @@ function App() {
           onSurvival={() => setPage("survival")}
           onGhost={() => setPage("ghost")}
           onBoss={() => setPage("boss")}
+          onWeakPractice={() => setPage("weak-practice")}
+          onLeaderboard={() => setPage("leaderboard")}
           onShop={() => setPage("shop")}
           onSettings={() => setSettingsOpen(true)}
           onToggleColorMode={toggleColorMode}
