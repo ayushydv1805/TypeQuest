@@ -50,10 +50,18 @@ function App() {
 
     completeCloudAuthRedirect()
       .then((cloudProfile) => {
-        if (active) setUser(cloudProfile || getActiveUser());
+        const profile = cloudProfile || getActiveUser();
+        if (active) {
+          setUser(profile);
+          if (profile?.authMode === "cloud") {
+            setTheme(readInitialTheme());
+            setColorMode(readInitialColorMode());
+          }
+        }
       })
       .catch(() => {
-        if (active) setUser(getActiveUser());
+        const profile = getActiveUser();
+        if (active) setUser(profile);
       })
       .finally(() => {
         if (active) setAuthReady(true);
