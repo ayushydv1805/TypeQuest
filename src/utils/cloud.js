@@ -124,6 +124,46 @@ export function getCloudSession() {
   return safeReadSession();
 }
 
+export async function completeCloudAuthRedirect() {
+  if (!isCloudConfigured() || typeof window === "undefined") {
+    return getCloudUserProfile();
+  }
+
+  const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const accessToken = params.get("access_token");
+  const refreshToken = params.get("refresh_token");
+
+  if (!accessToken || !refreshToken) {
+    return getCloudUserProfile();
+  }
+
+  const { url, apiKey } = getConfig();
+  const response = await fetch(url + "/auth/v1/user", {
+    headers: {
+      apikey: apiKey,
+      Authorization: "Bearer " + accessToken,
+    },
+  });
+  const user = await parseResponse(response);
+
+  storeSession({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    expires_in: Number(params.get("expires_in") || 3600),
+    token_type: params.get("token_type") || "bearer",
+    user,
+  });
+
+  // Avoid leaving access/refresh tokens visible in the address bar after exchange.
+  window.history.replaceState(
+    {},
+    document.title,
+    window.location.pathname + window.location.search
+  );
+
+  return getCloudUserProfile();
+}
+
 export function getCloudUserId() {
   return safeReadSession()?.user?.id || null;
 }
@@ -151,7 +191,8 @@ export function getCloudUserProfile() {
 }
 
 export async function signUpCloud({ name, email, password }) {
-  const data = await authRequest("signup", {
+  const redirectTo = typeof window !== "undefined" ? encodeURIComponent(window.location.origin) : "";
+  const data = await authRequest("signup?redirect_to=" + redirectTo, {
     email,
     password,
     data: { display_name: name },
