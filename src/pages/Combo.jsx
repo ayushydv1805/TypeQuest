@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect -- Timer completion and one-time reward saving intentionally update the game UI from effects. */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { completeGame } from "../utils/storage";
+import { accumulateCharacterMistakes } from "../utils/gamelogic";
 
 const words = [
   "keyboard",
@@ -37,6 +38,7 @@ function getRandomWord() {
 function Combo({ onBack }) {
   const [currentWord, setCurrentWord] = useState(getRandomWord);
   const [input, setInput] = useState("");
+  const characterErrorsRef = useRef({});
 
   const [time, setTime] = useState(60);
   const [started, setStarted] = useState(false);
@@ -74,6 +76,7 @@ const [achievementMessage, setAchievementMessage] =
 
   const handleTyping = (event) => {
     const value = event.target.value;
+    characterErrorsRef.current = accumulateCharacterMistakes(input, value, currentWord, characterErrorsRef.current);
 
     if (!started) {
       setStarted(true);
@@ -157,6 +160,7 @@ const [achievementMessage, setAchievementMessage] =
   bossWon: false,
   mode: "Combo",
   score,
+  characterErrors: characterErrorsRef.current,
 });
 if (
   reward &&
