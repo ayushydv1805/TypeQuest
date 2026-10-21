@@ -148,14 +148,45 @@ export function savePlayerData(data) {
 }
 
 export async function resetPlayerData() {
+  const cloudDeleted = await deleteCloudPlayerSave();
+  if (!cloudDeleted) return false;
+
   try {
     window.localStorage.removeItem(getPlayerStorageKey());
+    return true;
   } catch {
     return false;
   }
+}
 
-  const cloudDeleted = await deleteCloudPlayerSave();
-  return cloudDeleted;
+export function createPlayerBackup() {
+  return {
+    application: "TypeQuest",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    player: getPlayerData(),
+  };
+}
+
+export function restorePlayerBackup(backup) {
+  if (
+    !backup ||
+    typeof backup !== "object" ||
+    backup.application !== "TypeQuest" ||
+    backup.version !== 1 ||
+    !backup.player ||
+    typeof backup.player !== "object" ||
+    Array.isArray(backup.player)
+  ) {
+    throw new Error("This file is not a supported TypeQuest backup.");
+  }
+
+  const normalized = normalizePlayer(backup.player);
+  if (!savePlayerData(normalized)) {
+    throw new Error("Could not save restored progress on this device.");
+  }
+
+  return normalized;
 }
 
 function updateStreak(player) {
