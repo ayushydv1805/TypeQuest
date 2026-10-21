@@ -134,7 +134,11 @@ export async function completeCloudAuthRedirect() {
   const refreshToken = params.get("refresh_token");
 
   if (!accessToken || !refreshToken) {
-    return getCloudUserProfile();
+    const profile = getCloudUserProfile();
+    if (profile) {
+      try { await restoreCloudPlayerSave(profile.id); } catch { /* The local cache remains usable offline. */ }
+    }
+    return profile;
   }
 
   const { url, apiKey } = getConfig();
