@@ -6,6 +6,8 @@ import Achievements from "../components/Achievements";
 import { getPlayerData } from "../utils/storage";
 
 function Home({
+  user,
+  onLogout,
   onStart,
   onDaily,
   onSpeed,
@@ -24,7 +26,7 @@ function Home({
 
   return (
     <div className="app">
-      <Navbar player={player} onSettings={onSettings} onToggleColorMode={onToggleColorMode} colorMode={colorMode} />
+      <Navbar player={player} user={user} onLogout={onLogout} onSettings={onSettings} onToggleColorMode={onToggleColorMode} colorMode={colorMode} />
 
       <main className="home">
         <section className="hero">
