@@ -2,14 +2,13 @@
 
 The app is a Vite/React web app with a starter Capacitor configuration. These steps wrap its production build in an Android project.
 
-## 1. Install Capacitor once
+## 1. Install dependencies
 
-From the TypeQuest repository root, use Node.js 22+ and run:
+Capacitor Core, Android and CLI are included in package.json. From the TypeQuest repository root, use Node.js 22+ and run:
 
-    npm install @capacitor/core @capacitor/android
-    npm install --save-dev @capacitor/cli
+    npm ci
 
-The package manager will update both package.json and package-lock.json together.
+The repository's dependency-maintenance workflow will keep the package lockfile in sync. Do not install mismatched Capacitor major versions.
 
 ## 2. Configure cloud sign-in (optional but recommended)
 
@@ -32,7 +31,9 @@ Run the app on an emulator or a USB-connected device from Android Studio. After 
 
 ## 4. Build an APK
 
-In Android Studio, select Build → Build Bundle(s) / APK(s) → Build APK(s) for a debug install. For a public release, use Build → Generate Signed Bundle / APK and keep the signing key private.
+The GitHub Actions workflow **Build Android APK** is configured to generate a debug APK artifact when the feature branch is updated. Open the workflow run and download the artifact named typequest-debug-apk.
+
+To build locally, open Android Studio with npx cap open android. In Android Studio, select Build → Build Bundle(s) / APK(s) → Build APK(s) for a debug install. For a public release, use Build → Generate Signed Bundle / APK and keep the signing key private.
 
 The debug APK is normally written to android/app/build/outputs/apk/debug/app-debug.apk.
 
