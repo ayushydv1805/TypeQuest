@@ -58,3 +58,48 @@ export function getCharacterErrorCounts(targetText, typedText) {
 
   return errors;
 }
+
+
+export function accumulateCharacterMistakes(previousText, nextText, targetText, existingErrors = {}) {
+  const previous = String(previousText || "");
+  const next = String(nextText || "");
+  const target = String(targetText || "");
+  const updated = { ...existingErrors };
+
+  let prefix = 0;
+  while (
+    prefix < previous.length &&
+    prefix < next.length &&
+    previous[prefix] === next[prefix]
+  ) {
+    prefix += 1;
+  }
+
+  // Normal typing appends characters. For edits/pastes, count only the changed
+  // region so existing characters are not counted again on every keypress.
+  let nextEnd = next.length;
+  let previousEnd = previous.length;
+  while (
+    nextEnd > prefix &&
+    previousEnd > prefix &&
+    next[nextEnd - 1] === previous[previousEnd - 1]
+  ) {
+    nextEnd -= 1;
+    previousEnd -= 1;
+  }
+
+  if (next.startsWith(previous) && next.length >= previous.length) {
+    prefix = previous.length;
+    nextEnd = next.length;
+  }
+
+  for (let index = prefix; index < nextEnd; index += 1) {
+    const expected = target[index]?.toLowerCase();
+    if (!expected || next[index] === target[index] || !/^[a-z0-9]$/.test(expected)) {
+      continue;
+    }
+    updated[expected] = (Number(updated[expected]) || 0) + 1;
+  }
+
+  return updated;
+}
