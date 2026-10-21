@@ -118,6 +118,7 @@ export function getPlayerData() {
         try {
           const migrated = normalizePlayer(JSON.parse(legacyRaw));
           storage.setItem(key, JSON.stringify(migrated));
+          if (userId) storage.setItem("typequest-player-local-updated:" + userId, String(Date.now()));
           storage.removeItem(PLAYER_KEY);
           queueCloudPlayerSave(migrated);
           return migrated;
@@ -136,10 +137,14 @@ export function getPlayerData() {
 export function savePlayerData(data) {
   try {
     const normalized = normalizePlayer(data);
+    const userId = getActiveUserId();
     window.localStorage.setItem(
-      getPlayerStorageKey(),
+      getPlayerStorageKey(userId),
       JSON.stringify(normalized)
     );
+    if (userId) {
+      window.localStorage.setItem("typequest-player-local-updated:" + userId, String(Date.now()));
+    }
     queueCloudPlayerSave(normalized);
     return true;
   } catch {
@@ -152,7 +157,9 @@ export async function resetPlayerData() {
   if (!cloudDeleted) return false;
 
   try {
-    window.localStorage.removeItem(getPlayerStorageKey());
+    const userId = getActiveUserId();
+    window.localStorage.removeItem(getPlayerStorageKey(userId));
+    if (userId) window.localStorage.removeItem("typequest-player-local-updated:" + userId);
     return true;
   } catch {
     return false;
