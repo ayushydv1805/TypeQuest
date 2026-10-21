@@ -1,0 +1,8 @@
+{
+  "appId": "com.ayushydv1805.typequest",
+  "appName": "TypeQuest",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
