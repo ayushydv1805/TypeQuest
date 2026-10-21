@@ -1,8 +1,10 @@
-import { useEffect } from "react";
-import { getPlayerData, resetPlayerData } from "../utils/storage";
+import { useEffect, useRef, useState } from "react";
+import { createPlayerBackup, getPlayerData, resetPlayerData, restorePlayerBackup } from "../utils/storage";
 
 function SettingsModal({ onClose, colorMode, onColorModeChange }) {
   const player = getPlayerData();
+  const backupFileRef = useRef(null);
+  const [backupMessage, setBackupMessage] = useState("");
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -18,15 +20,69 @@ function SettingsModal({ onClose, colorMode, onColorModeChange }) {
     };
   }, [onClose]);
 
-  const handleReset = () => {
+  const handleReset = async () => {
     const confirmed = window.confirm(
-      "Reset this profile's progress, coins, achievements, themes and stats?"
+      "Reset this profile's progress, coins, achievements, themes and stats on this device and in the cloud?"
     );
 
     if (!confirmed) return;
 
-    resetPlayerData();
+    const reset = await resetPlayerData();
+    if (!reset) {
+      window.alert("TypeQuest could not reset the cloud save. Your local progress was kept; check your connection and try again.");
+      return;
+    }
+
     window.location.reload();
+  };
+
+  const handleExportBackup = () => {
+    try {
+      const backup = createPlayerBackup();
+      const blob = new Blob([JSON.stringify(backup, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "typequest-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setBackupMessage("Backup downloaded. Keep this JSON file somewhere safe.");
+    } catch {
+      setBackupMessage("Could not create the backup. Check browser download permissions and try again.");
+    }
+  };
+
+  const handleImportBackup = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (file.size > 2_000_000) {
+      setBackupMessage("This backup file is unexpectedly large. Choose a TypeQuest backup under 2 MB.");
+      return;
+    }
+
+    try {
+      const payload = JSON.parse(await file.text());
+      const confirmed = window.confirm(
+        "Restore this backup over the currently signed-in profile? Current progress will be replaced."
+      );
+      if (!confirmed) return;
+
+      restorePlayerBackup(payload);
+      window.alert("Backup restored. TypeQuest will reload with the recovered progress.");
+      window.location.reload();
+    } catch (error) {
+      setBackupMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not restore this backup. Check that the JSON file is valid."
+      );
+    }
   };
 
   return (
@@ -108,7 +164,36 @@ function SettingsModal({ onClose, colorMode, onColorModeChange }) {
         </div>
 
         <div className="settings-note">
-          This profile's XP, scores, achievements, unlocks, run history, theme and appearance are saved on this device and remain after closing and reopening TypeQuest. Local profiles do not sync across devices, and clearing app or browser data can erase local saves.
+          Progress is saved on this device after each completed run and syncs to your TypeQuest cloud account when Supabase is configured. Local-only profiles stay on this device. Clearing app/browser data can erase local copies, so download a backup regularly.
+        </div>
+
+        <div className="backup-card">
+          <div>
+            <span>KEEP YOUR PROGRESS SAFE</span>
+            <strong>Backup & Restore</strong>
+            <p>Download a portable JSON copy of this profile or restore one from a previous device.</p>
+          </div>
+          <div className="backup-actions">
+            <button className="start-btn" type="button" onClick={handleExportBackup}>
+              ⬇ Download Backup
+            </button>
+            <button
+              className="shop-btn"
+              type="button"
+              onClick={() => backupFileRef.current?.click()}
+            >
+              ⬆ Restore Backup
+            </button>
+          </div>
+          <input
+            ref={backupFileRef}
+            className="backup-file-input"
+            type="file"
+            accept="application/json,.json"
+            onChange={handleImportBackup}
+            aria-label="Select TypeQuest backup JSON file"
+          />
+          {backupMessage && <p className="backup-message" role="status">{backupMessage}</p>}
         </div>
 
         <button className="danger-btn" onClick={handleReset}>
