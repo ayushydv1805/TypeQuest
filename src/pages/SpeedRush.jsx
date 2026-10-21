@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect -- Timer completion and one-time reward saving intentionally update the game UI from effects. */
 import { useEffect, useState } from "react";
 import { completeGame } from "../utils/storage";
 
@@ -43,7 +44,6 @@ function SpeedRush({ onBack }) {
 
   const [wordsTyped, setWordsTyped] = useState(0);
   const [correctWords, setCorrectWords] = useState(0);
-  const [errors, setErrors] = useState(0);
   const [combo, setCombo] = useState(0);
   const [bestCombo, setBestCombo] = useState(0);
   const [score, setScore] = useState(0);
@@ -102,7 +102,6 @@ function SpeedRush({ onBack }) {
 
       setCurrentWord(getRandomWord());
     } else {
-      setErrors((previous) => previous + 1);
       setCombo(0);
     }
 
@@ -150,6 +149,8 @@ function SpeedRush({ onBack }) {
     wpm,
     accuracy,
     elapsedTime,
+    bestCombo,
+    score,
   ]);
 
   const restart = () => {
