@@ -161,7 +161,11 @@ export async function completeCloudAuthRedirect() {
     window.location.pathname + window.location.search
   );
 
-  return getCloudUserProfile();
+  const profile = getCloudUserProfile();
+  if (profile) {
+    try { await restoreCloudPlayerSave(profile.id); } catch { /* Keep the local copy available offline. */ }
+  }
+  return profile;
 }
 
 export function getCloudUserId() {
@@ -295,6 +299,10 @@ export async function restoreCloudPlayerSave(userId) {
   if (!session || session.user.id !== userId) return null;
 
   const { url, apiKey } = getConfig();
+  const localKey = PLAYER_KEY + ":" + userId;
+  const timestampKey = "typequest-player-local-updated:" + userId;
+  const localRaw = window.localStorage.getItem(localKey);
+  const localUpdatedAt = Number(window.localStorage.getItem(timestampKey)) || 0;
   const query = new URLSearchParams({
     select: "player_data,updated_at",
     user_id: "eq." + userId,
@@ -311,13 +319,44 @@ export async function restoreCloudPlayerSave(userId) {
     }
   );
   const rows = await parseResponse(response);
-  if (!Array.isArray(rows) || !rows[0] || !rows[0].player_data) return null;
+  const row = Array.isArray(rows) ? rows[0] : null;
 
-  const player = rows[0].player_data;
-  if (!player || typeof player !== "object" || Array.isArray(player)) return null;
+  if (!row || !row.player_data) {
+    // First cloud sign-in on a device with an existing local save: preserve and upload it.
+    if (localRaw) {
+      try {
+        const localPlayer = JSON.parse(localRaw);
+        if (localPlayer && typeof localPlayer === "object" && !Array.isArray(localPlayer)) {
+          await pushCloudPlayerSave(localPlayer);
+          return localPlayer;
+        }
+      } catch {
+        // Ignore a corrupt local save; the normal storage layer will recover with defaults.
+      }
+    }
+    return null;
+  }
 
-  window.localStorage.setItem(PLAYER_KEY + ":" + userId, JSON.stringify(player));
-  return player;
+  const cloudPlayer = row.player_data;
+  if (!cloudPlayer || typeof cloudPlayer !== "object" || Array.isArray(cloudPlayer)) return null;
+  const cloudUpdatedAt = Date.parse(row.updated_at || "") || 0;
+
+  // Local-first sync: do not discard a save that was made more recently while offline.
+  if (localRaw && localUpdatedAt > cloudUpdatedAt) {
+    try {
+      const localPlayer = JSON.parse(localRaw);
+      if (localPlayer && typeof localPlayer === "object" && !Array.isArray(localPlayer)) {
+        await pushCloudPlayerSave(localPlayer);
+        return localPlayer;
+      }
+    } catch {
+      // Use the valid cloud copy below if local JSON has become corrupt.
+    }
+  }
+
+  window.localStorage.setItem(localKey, JSON.stringify(cloudPlayer));
+  window.localStorage.setItem(timestampKey, String(cloudUpdatedAt || Date.now()));
+  return cloudPlayer;
 }
 
 async function pushCloudLeaderboardEntry(playerData, session) {
