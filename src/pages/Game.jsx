@@ -9,6 +9,7 @@ import {
   calculateScore,
   calculateXP,
   getDailyChallengeIndex,
+  getCharacterErrorCounts,
 } from "../utils/gamelogic";
 import { completeGame } from "../utils/storage";
 
@@ -91,6 +92,7 @@ function Game({ onBack, daily = false }) {
       mode: daily ? "Daily Challenge" : "Classic",
       score,
       daily,
+      characterErrors: getCharacterErrorCounts(text, input),
     });
 
     setLevelUp(result.leveledUp);
