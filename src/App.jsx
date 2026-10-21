@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect -- Resolve auth redirects asynchronously before rendering protected app content. */
 import { useEffect, useState } from "react";
 import AuthGate from "./components/AuthGate";
 import Home from "./pages/Home";
@@ -13,6 +14,7 @@ import Shop from "./pages/Shop";
 import SettingsModal from "./components/SettingsModal";
 import { getPlayerData, savePlayerData } from "./utils/storage";
 import { getActiveUser, signOutLocalUser } from "./utils/auth";
+import { completeCloudAuthRedirect } from "./utils/cloud";
 
 function readInitialTheme() {
   try {
@@ -32,6 +34,7 @@ function readInitialColorMode() {
 
 function App() {
   const [user, setUser] = useState(getActiveUser);
+  const [authReady, setAuthReady] = useState(false);
   const [page, setPage] = useState("home");
   const [theme, setTheme] = useState(readInitialTheme);
   const [colorMode, setColorMode] = useState(readInitialColorMode);
@@ -42,6 +45,25 @@ function App() {
     document.body.dataset.colorMode = colorMode;
     document.documentElement.style.colorScheme = colorMode;
   }, [theme, colorMode]);
+
+  useEffect(() => {
+    let active = true;
+
+    completeCloudAuthRedirect()
+      .then((cloudProfile) => {
+        if (active) setUser(cloudProfile || getActiveUser());
+      })
+      .catch(() => {
+        if (active) setUser(getActiveUser());
+      })
+      .finally(() => {
+        if (active) setAuthReady(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleAuthenticated = (profile) => {
     setUser(profile);
@@ -71,6 +93,17 @@ function App() {
   };
 
   const goHome = () => setPage("home");
+
+  if (!authReady) {
+    return (
+      <main className="auth-shell">
+        <section className="auth-card auth-loading-card">
+          <div className="auth-brand"><span className="auth-logo">⚡</span><span>TYPEQUEST</span></div>
+          <p className="auth-description">Checking your saved profile…</p>
+        </section>
+      </main>
+    );
+  }
 
   if (!user) {
     return <AuthGate onAuthenticated={handleAuthenticated} />;
