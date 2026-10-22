@@ -39,7 +39,7 @@ function Achievements() {
               </div>
 
               <div className="achievement-info">
-                <h3>{achievement.name}</h3>
+                <h3>{achievement.title}</h3>
 
                 <p>
                   {achievement.description}

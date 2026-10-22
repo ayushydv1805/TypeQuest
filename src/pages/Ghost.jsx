@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+/* eslint-disable react-hooks/set-state-in-effect -- Timer completion and one-time reward saving intentionally update the game UI from effects. */
+import { useEffect, useRef, useState } from "react";
 import { completeGame, getPlayerData } from "../utils/storage";
+import { accumulateCharacterMistakes } from "../utils/gamelogic";
 
 const words = [
   "keyboard",
@@ -42,6 +44,7 @@ function Ghost({ onBack }) {
     useState(getRandomWord);
 
   const [input, setInput] = useState("");
+  const characterErrorsRef = useRef({});
 
   const [time, setTime] = useState(60);
   const [started, setStarted] = useState(false);
@@ -90,6 +93,7 @@ const [achievementMessage, setAchievementMessage] =
 
   const handleTyping = (event) => {
     const value = event.target.value;
+    characterErrorsRef.current = accumulateCharacterMistakes(input, value, currentWord, characterErrorsRef.current);
 
     if (!started) {
       setStarted(true);
@@ -149,6 +153,7 @@ const reward = completeGame({
   bossWon: false,
   mode: "Ghost",
   score,
+  characterErrors: characterErrorsRef.current,
 });
 if (
   reward &&
@@ -168,6 +173,8 @@ if (
     wpm,
     accuracy,
     elapsedTime,
+    distance,
+    score,
   ]);
 
   const restart = () => {

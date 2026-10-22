@@ -1,17 +1,25 @@
 {
   "name": "typequest",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "android:sync": "npm run build && cap sync android",
+    "android:open": "cap open android",
+    "test": "node --test",
+    "desktop:run": "npm run build && npx --yes electron@45.0.0 .",
+    "desktop:dist": "npm run build && npx --yes electron-builder@26.15.3 --win --x64 --publish never",
+    "desktop:dir": "npm run build && npx --yes electron-builder@26.15.3 --dir --publish never"
   },
   "dependencies": {
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -22,6 +30,57 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.4",
     "globals": "^17.11.0",
-    "vite": "^8.2.2"
+    "vite": "^8.2.2",
+    "@capacitor/cli": "^8.5.3"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
+  },
+  "main": "electron/main.cjs",
+  "build": {
+    "appId": "com.ayushydv1805.typequest",
+    "productName": "TypeQuest",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "protocols": [
+      {
+        "name": "TypeQuest Authentication",
+        "schemes": [
+          "typequest"
+        ]
+      }
+    ],
+    "electronVersion": "45.0.0"
   }
 }

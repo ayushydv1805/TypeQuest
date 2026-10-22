@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+/* eslint-disable react-hooks/set-state-in-effect -- Timer completion and one-time reward saving intentionally update the game UI from effects. */
+import { useEffect, useRef, useState } from "react";
 import { completeGame } from "../utils/storage";
+import { accumulateCharacterMistakes } from "../utils/gamelogic";
 
 const words = [
   "computer",
@@ -36,6 +38,7 @@ function getRandomWord() {
 function SpeedRush({ onBack }) {
   const [currentWord, setCurrentWord] = useState(getRandomWord);
   const [input, setInput] = useState("");
+  const characterErrorsRef = useRef({});
 
   const [time, setTime] = useState(60);
   const [started, setStarted] = useState(false);
@@ -43,7 +46,6 @@ function SpeedRush({ onBack }) {
 
   const [wordsTyped, setWordsTyped] = useState(0);
   const [correctWords, setCorrectWords] = useState(0);
-  const [errors, setErrors] = useState(0);
   const [combo, setCombo] = useState(0);
   const [bestCombo, setBestCombo] = useState(0);
   const [score, setScore] = useState(0);
@@ -71,6 +73,7 @@ function SpeedRush({ onBack }) {
 
   const handleTyping = (event) => {
     const value = event.target.value;
+    characterErrorsRef.current = accumulateCharacterMistakes(input, value, currentWord, characterErrorsRef.current);
 
     if (!started) {
       setStarted(true);
@@ -102,7 +105,6 @@ function SpeedRush({ onBack }) {
 
       setCurrentWord(getRandomWord());
     } else {
-      setErrors((previous) => previous + 1);
       setCombo(0);
     }
 
@@ -139,6 +141,7 @@ function SpeedRush({ onBack }) {
       combo: bestCombo,
       mode: "Speed Rush",
       score,
+      characterErrors: characterErrorsRef.current,
     });
 
     setLevelUp(reward.leveledUp);
@@ -150,6 +153,8 @@ function SpeedRush({ onBack }) {
     wpm,
     accuracy,
     elapsedTime,
+    bestCombo,
+    score,
   ]);
 
   const restart = () => {

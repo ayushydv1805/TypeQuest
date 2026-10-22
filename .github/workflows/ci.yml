@@ -1,0 +1,38 @@
+name: TypeQuest CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: typequest-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Summarize dependency advisories
+        run: |
+          npm audit --json > npm-audit-report.json || true
+          node -e "const report = require('./npm-audit-report.json'); const findings = Object.entries(report.vulnerabilities || {}).map(([name, item]) => ({ name, severity: item.severity, range: item.range, fixAvailable: item.fixAvailable, via: item.via.map((entry) => typeof entry === 'string' ? entry : entry.title) })); console.log(JSON.stringify({ summary: report.metadata && report.metadata.vulnerabilities, findings }, null, 2));"
+      - name: Run ESLint
+        run: npm run lint
+      - name: Run typing regression tests
+        run: npm test
+      - name: Create production build
+        run: npm run build

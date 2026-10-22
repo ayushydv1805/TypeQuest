@@ -3,9 +3,12 @@ import LevelBar from "../components/LevelBar";
 import Stats from "../components/Stats";
 import ProfileCard from "../components/ProfileCard";
 import Achievements from "../components/Achievements";
+import ProgressInsights from "../components/ProgressInsights";
 import { getPlayerData } from "../utils/storage";
 
 function Home({
+  user,
+  onLogout,
   onStart,
   onDaily,
   onSpeed,
@@ -13,6 +16,8 @@ function Home({
   onSurvival,
   onGhost,
   onBoss,
+  onWeakPractice,
+  onLeaderboard,
   onShop,
   onSettings,
   onToggleColorMode,
@@ -24,7 +29,7 @@ function Home({
 
   return (
     <div className="app">
-      <Navbar player={player} onSettings={onSettings} onToggleColorMode={onToggleColorMode} colorMode={colorMode} />
+      <Navbar player={player} user={user} onLogout={onLogout} onSettings={onSettings} onToggleColorMode={onToggleColorMode} colorMode={colorMode} />
 
       <main className="home">
         <section className="hero">
@@ -48,12 +53,19 @@ function Home({
             <button className="shop-btn" onClick={onShop}>
               🛒 SHOP
             </button>
+            <button className="shop-btn" onClick={onWeakPractice}>
+              ⌨️ WEAK-KEY DRILLS
+            </button>
           </div>
         </section>
 
         <LevelBar player={player} />
         <ProfileCard />
         <Stats />
+        <ProgressInsights
+          onPracticeWeakCharacters={onWeakPractice}
+          onOpenLeaderboard={onLeaderboard}
+        />
         <Achievements />
 
         <section className="daily-card">
