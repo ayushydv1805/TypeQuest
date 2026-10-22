@@ -12,8 +12,8 @@
     "android:open": "cap open android",
     "test": "node --test",
     "desktop:run": "npm run build && npx --yes electron@45.0.0 .",
-    "desktop:dist": "npm run build && npx --yes electron-builder@26.15.3 --win --x64",
-    "desktop:dir": "npm run build && npx --yes electron-builder@26.15.3 --dir"
+    "desktop:dist": "npm run build && npx --yes electron-builder@26.15.3 --win --x64 --publish never",
+    "desktop:dir": "npm run build && npx --yes electron-builder@26.15.3 --dir --publish never"
   },
   "dependencies": {
     "react": "^19.2.8",
