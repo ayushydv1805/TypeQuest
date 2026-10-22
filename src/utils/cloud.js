@@ -199,7 +199,12 @@ export function getCloudUserProfile() {
 }
 
 export async function signUpCloud({ name, email, password }) {
-  const redirectTo = typeof window !== "undefined" ? encodeURIComponent(window.location.origin) : "";
+  const redirectUri = typeof window !== "undefined" && window.location.protocol === "app:"
+    ? "typequest://auth"
+    : typeof window !== "undefined"
+      ? window.location.origin
+      : "";
+  const redirectTo = encodeURIComponent(redirectUri);
   const data = await authRequest("signup?redirect_to=" + redirectTo, {
     email,
     password,
