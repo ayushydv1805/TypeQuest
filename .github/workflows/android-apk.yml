@@ -3,10 +3,23 @@ name: Build Android APK
 on:
   push:
     branches: [fix/login-persistence]
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - "capacitor.config.json"
+      - "vite.config.js"
+      - "index.html"
+      - "src/**"
+      - "public/**"
+      - ".github/workflows/android-apk.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: typequest-android-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   debug-apk:
