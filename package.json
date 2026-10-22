@@ -51,7 +51,6 @@
       "package.json"
     ],
     "asar": true,
-    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "win": {
       "target": [
         {
