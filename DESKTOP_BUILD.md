@@ -27,7 +27,7 @@ The feature branch workflow is configured to publish an artifact on relevant cha
 
 - Local player profiles and progress remain stored on this Windows user account after closing and reopening TypeQuest.
 - Sign-in uses device-local profiles unless a dedicated TypeQuest Supabase project has been configured.
-- Cloud sign-up confirmation redirects may require app://typequest to be added to the Supabase project's allowed redirect URLs before using cloud accounts from the desktop app.
+- Cloud sign-up confirmation redirects use typequest://auth on desktop. Add this exact URI to the dedicated Supabase project's allowed redirect URLs before using cloud accounts from the desktop app.
 - The Electron renderer runs with Node integration disabled, context isolation and sandbox enabled. External links are opened in the default browser and only HTTP(S) URLs are allowed.
 - No code-signing certificate is configured, so Windows SmartScreen may warn when the unsigned installer is first opened.
 
