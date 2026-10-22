@@ -1,12 +1,69 @@
-const { app, BrowserWindow, shell } = require("electron");
+const { app, BrowserWindow, net, protocol, shell } = require("electron");
+const fs = require("node:fs/promises");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
 
 const APP_ID = "com.ayushydv1805.typequest";
-const INDEX_PATH = path.join(app.getAppPath(), "dist", "index.html");
-const LOCAL_ENTRY_URL = pathToFileURL(INDEX_PATH).href;
+const APP_SCHEME = "app";
+const APP_HOST = "typequest";
+const DIST_DIR = path.resolve(app.getAppPath(), "dist");
+const APP_ORIGIN = APP_SCHEME + "://" + APP_HOST;
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: APP_SCHEME,
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+      stream: true,
+    },
+  },
+]);
 
 let mainWindow = null;
+
+function notFound() {
+  return new Response("Not found", {
+    status: 404,
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
+}
+
+async function serveAppFile(request) {
+  let requestUrl;
+  try {
+    requestUrl = new URL(request.url);
+  } catch {
+    return notFound();
+  }
+
+  if (requestUrl.protocol !== APP_SCHEME + ":" || requestUrl.hostname !== APP_HOST) {
+    return notFound();
+  }
+
+  let pathname;
+  try {
+    pathname = decodeURIComponent(requestUrl.pathname).replace(/^\/+/, "");
+  } catch {
+    return notFound();
+  }
+
+  const relativePath = pathname || "index.html";
+  const filePath = path.resolve(DIST_DIR, relativePath);
+  if (filePath !== DIST_DIR && !filePath.startsWith(DIST_DIR + path.sep)) {
+    return notFound();
+  }
+
+  try {
+    const stat = await fs.stat(filePath);
+    if (!stat.isFile()) return notFound();
+    return await net.fetch(pathToFileURL(filePath).href);
+  } catch {
+    return notFound();
+  }
+}
 
 function openExternalHttps(url) {
   try {
@@ -45,7 +102,9 @@ function createWindow() {
   });
 
   mainWindow.webContents.on("will-navigate", (event, url) => {
-    if (url === LOCAL_ENTRY_URL || url.startsWith(LOCAL_ENTRY_URL + "#")) return;
+    if (url === APP_ORIGIN || url.startsWith(APP_ORIGIN + "/") || url.startsWith(APP_ORIGIN + "#")) {
+      return;
+    }
 
     event.preventDefault();
     openExternalHttps(url);
@@ -59,7 +118,7 @@ function createWindow() {
     mainWindow = null;
   });
 
-  mainWindow.loadFile(INDEX_PATH).catch(() => {
+  mainWindow.loadURL(APP_ORIGIN + "/").catch(() => {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.loadURL("about:blank").catch(() => {});
     }
@@ -69,6 +128,7 @@ function createWindow() {
 app.setAppUserModelId(APP_ID);
 
 app.whenReady().then(() => {
+  protocol.handle(APP_SCHEME, serveAppFile);
   createWindow();
 
   app.on("activate", () => {
