@@ -55,3 +55,10 @@ Typing Insights show recent WPM and characters most often mistyped. Weak-key pra
 ## Android APK
 
 See ANDROID_BUILD.md for Capacitor setup, Android Studio instructions, and pre-release tests.
+
+
+## Windows desktop app
+
+Electron packaging is configured for a Windows installer and portable EXE. See DESKTOP_BUILD.md for local build commands and how to download the Windows artifact from GitHub Actions. The app uses a local secure origin for packaged assets and keeps progress in the user's local app data. Unsigned builds may show a Windows SmartScreen warning.
+
+The Windows package is built separately from the Android APK. See ANDROID_BUILD.md for Android steps. Cloud sync still requires a dedicated TypeQuest Supabase project and its project URL/publishable key.
