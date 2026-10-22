@@ -6,6 +6,7 @@ const { pathToFileURL } = require("node:url");
 const APP_ID = "com.ayushydv1805.typequest";
 const APP_SCHEME = "app";
 const APP_HOST = "typequest";
+const AUTH_SCHEME = "typequest";
 const DIST_DIR = path.resolve(app.getAppPath(), "dist");
 const APP_ORIGIN = APP_SCHEME + "://" + APP_HOST;
 
@@ -23,45 +24,89 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 let mainWindow = null;
+let pendingAuthHash = "";
 
-function notFound() {
-  return new Response("Not found", {
-    status: 404,
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
-  });
+function extractAuthHash(deepLink) {
+  try {
+    const parsed = new URL(deepLink);
+    if (parsed.protocol !== AUTH_SCHEME + ":" || parsed.hostname !== "auth") return "";
+    if (!parsed.hash || !parsed.hash.includes("access_token=")) return "";
+    return parsed.hash;
+  } catch {
+    return "";
+  }
 }
+
+function openAuthLink(deepLink) {
+  const hash = extractAuthHash(deepLink);
+  if (!hash) return;
+
+  pendingAuthHash = hash;
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    const target = APP_ORIGIN + "/" + pendingAuthHash;
+    pendingAuthHash = "";
+    mainWindow.loadURL(target).catch(() => {});
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+  } else if (app.isReady()) {
+    createWindow();
+  }
+}
+
+const initialAuthLink = process.argv.find((argument) =>
+  argument.toLowerCase().startsWith(AUTH_SCHEME + "://auth")
+);
+if (initialAuthLink) pendingAuthHash = extractAuthHash(initialAuthLink);
+
+const hasSingleInstanceLock = app.requestSingleInstanceLock();
+if (!hasSingleInstanceLock) app.quit();
+
+app.on("open-url", (event, url) => {
+  event.preventDefault();
+  openAuthLink(url);
+});
+
+app.on("second-instance", (_event, commandLine) => {
+  const deepLink = commandLine.find((argument) =>
+    argument.toLowerCase().startsWith(AUTH_SCHEME + "://auth")
+  );
+  if (deepLink) openAuthLink(deepLink);
+  else if (mainWindow && !mainWindow.isDestroyed()) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+  }
+});
 
 async function serveAppFile(request) {
   let requestUrl;
   try {
     requestUrl = new URL(request.url);
   } catch {
-    return notFound();
+    return new Response("Not found", { status: 404 });
   }
 
   if (requestUrl.protocol !== APP_SCHEME + ":" || requestUrl.hostname !== APP_HOST) {
-    return notFound();
+    return new Response("Not found", { status: 404 });
   }
 
   let pathname;
   try {
     pathname = decodeURIComponent(requestUrl.pathname).replace(/^\/+/, "");
   } catch {
-    return notFound();
+    return new Response("Not found", { status: 404 });
   }
 
-  const relativePath = pathname || "index.html";
-  const filePath = path.resolve(DIST_DIR, relativePath);
+  const filePath = path.resolve(DIST_DIR, pathname || "index.html");
   if (filePath !== DIST_DIR && !filePath.startsWith(DIST_DIR + path.sep)) {
-    return notFound();
+    return new Response("Not found", { status: 404 });
   }
 
   try {
     const stat = await fs.stat(filePath);
-    if (!stat.isFile()) return notFound();
+    if (!stat.isFile()) return new Response("Not found", { status: 404 });
     return await net.fetch(pathToFileURL(filePath).href);
   } catch {
-    return notFound();
+    return new Response("Not found", { status: 404 });
   }
 }
 
@@ -118,7 +163,9 @@ function createWindow() {
     mainWindow = null;
   });
 
-  mainWindow.loadURL(APP_ORIGIN + "/").catch(() => {
+  const target = APP_ORIGIN + "/" + pendingAuthHash;
+  pendingAuthHash = "";
+  mainWindow.loadURL(target).catch(() => {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.loadURL("about:blank").catch(() => {});
     }
@@ -126,6 +173,7 @@ function createWindow() {
 }
 
 app.setAppUserModelId(APP_ID);
+if (app.isPackaged) app.setAsDefaultProtocolClient(AUTH_SCHEME);
 
 app.whenReady().then(() => {
   protocol.handle(APP_SCHEME, serveAppFile);
