@@ -41,6 +41,9 @@ jobs:
       - name: Check dependency security
         run: npm audit --audit-level=high
 
+      - name: Check desktop main-process syntax
+        run: node --check electron/main.cjs
+
       - name: Run ESLint
         run: npm run lint
 
