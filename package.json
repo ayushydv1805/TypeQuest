@@ -74,6 +74,14 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "deleteAppDataOnUninstall": false
-    }
+    },
+    "protocols": [
+      {
+        "name": "TypeQuest Authentication",
+        "schemes": [
+          "typequest"
+        ]
+      }
+    ]
   }
 }
